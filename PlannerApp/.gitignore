@@ -1,41 +1,36 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
+# Inherits rules from root .gitignore
+# Only Expo/RN-specific additions below
 
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+.metro-health-check*
 
-# Native
+# EAS / prebuild generated folders
+ios/
+android/
 .kotlin/
-*.orig.*
+
+# Native signing
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+google-services.json
+GoogleService-Info.plist
 
-# Metro
-.metro-health-check*
+# Env
+.env
+.env.*
+!.env.example
 
-# debug
+node_modules/
+*.orig.*
+*.tsbuildinfo
 npm-debug.*
 yarn-debug.*
 yarn-error.*
-
-# macOS
 .DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android

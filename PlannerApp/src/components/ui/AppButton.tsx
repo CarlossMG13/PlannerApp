@@ -17,6 +17,7 @@ type Props = {
   variant?: Variant;
   loading?: boolean;
   leftElement?: React.ReactNode;
+  rightElement?: React.ReactNode;
   style?: ViewStyle;
 };
 
@@ -26,6 +27,7 @@ export function AppButton({
   variant = "primary",
   loading = false,
   leftElement,
+  rightElement,
   style,
 }: Props) {
   const isPrimary = variant === "primary";
@@ -55,6 +57,7 @@ export function AppButton({
           >
             {label}
           </Text>
+          {rightElement}
         </View>
       )}
     </TouchableOpacity>

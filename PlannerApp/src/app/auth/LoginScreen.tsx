@@ -16,6 +16,7 @@ import { AppInput } from "@/components/ui/AppInput";
 import { AppButton } from "@/components/ui/AppButton";
 import { colors, radius, shadow } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
+import { MotiView } from "moti";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -79,24 +80,39 @@ export function LoginScreen({ navigation }: Props) {
       keyboardShouldPersistTaps="handled"
     >
       {/* Logo */}
-      <View style={styles.logoSection}>
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: "timing", duration: 500 }}
+        style={styles.logoSection}
+      >
         <View style={styles.logoBox}>
           <Ionicons name="sparkles" size={28} color="#fff" />
         </View>
         <Text style={styles.appName}>EventPlan</Text>
         <Text style={styles.appSubtitle}>Elite Planning Suite</Text>
-      </View>
+      </MotiView>
 
       {/* Header */}
-      <View style={styles.header}>
+      <MotiView
+        from={{ opacity: 0, translateY: 10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: "timing", duration: 500, delay: 100 }}
+        style={styles.header}
+      >
         <Text style={styles.title}>Bienvenido de nuevo</Text>
         <Text style={styles.subtitle}>
           Ingresa tus credenciales para continuar
         </Text>
-      </View>
+      </MotiView>
 
       {/* Form */}
-      <View style={styles.form}>
+      <MotiView
+        from={{ opacity: 0, translateY: 10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: "timing", duration: 500, delay: 200 }}
+        style={styles.form}
+      >
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Correo electrónico</Text>
           <AppInput
@@ -130,17 +146,27 @@ export function LoginScreen({ navigation }: Props) {
           loading={loading}
           style={styles.loginButton}
         />
-      </View>
+      </MotiView>
 
       {/* Divider */}
-      <View style={styles.divider}>
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: "timing", duration: 400, delay: 350 }}
+        style={styles.divider}
+      >
         <View style={styles.dividerLine} />
         <Text style={styles.dividerText}>O CONTINUAR CON</Text>
         <View style={styles.dividerLine} />
-      </View>
+      </MotiView>
 
       {/* Social Buttons */}
-      <View style={styles.socialRow}>
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: "timing", duration: 400, delay: 350 }}
+        style={styles.socialRow}
+      >
         <AppButton
           label="Google"
           variant="outline"
@@ -166,7 +192,7 @@ export function LoginScreen({ navigation }: Props) {
             />
           }
         />
-      </View>
+      </MotiView>
 
       {/* Spacer */}
       <View style={styles.spacer} />

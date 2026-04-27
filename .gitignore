@@ -1,0 +1,111 @@
+# ─── ENVIRONMENT & SECRETS ───────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Clerk keys, Supabase, DB URLs, API secrets
+*.secret
+secrets/
+credentials/
+
+# ─── DEPENDENCIES ─────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ─── NEXT.JS (web/) ───────────────────────────────────────────────────────────
+.next/
+out/
+build/
+/web/.next/
+/web/out/
+/web/build/
+/web/src/generated/
+next-env.d.ts
+
+# ─── EXPO / REACT NATIVE (PlannerApp/) ────────────────────────────────────────
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Generated native folders (EAS / prebuild)
+/PlannerApp/ios/
+/PlannerApp/android/
+*.orig.*
+
+# ─── CERTIFICATES & SIGNING ───────────────────────────────────────────────────
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.cer
+*.certSigningRequest
+google-services.json
+GoogleService-Info.plist
+
+# ─── BUILD OUTPUTS ────────────────────────────────────────────────────────────
+*.tsbuildinfo
+coverage/
+.turbo/
+
+# ─── LOGS ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ─── EDITORS ──────────────────────────────────────────────────────────────────
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+.vscode/settings.json
+.vscode/launch.json
+
+# ─── PRISMA ───────────────────────────────────────────────────────────────────
+# Keep schema.prisma, ignore generated client
+/web/node_modules/.prisma/
+/web/src/generated/prisma/
+
+# ─── VERCEL / DEPLOYMENT ──────────────────────────────────────────────────────
+.vercel
+.netlify
+
+# ─── CLAUDE ───────────────────────────────────────────────────────────────────
+CLAUDE.md.local
+
+# ─── MISC ─────────────────────────────────────────────────────────────────────
+*.pem
+.cache/
+tmp/
+temp/

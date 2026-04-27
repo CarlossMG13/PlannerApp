@@ -12,4 +12,305 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
+// ─── ENUMS ───────────────────────────────────────────
 
+enum Role {
+  CLIENT
+  PLANNER
+  VENDOR
+  ADMIN
+}
+
+enum EventType {
+  WEDDING
+  CORPORATE
+  BIRTHDAY
+  SOCIAL
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum VendorStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum BudgetItemStatus {
+  ESTIMATED
+  CONFIRMED
+  PAID
+}
+
+enum PlannerIdentityType {
+  COMPANY
+  INDEPENDENT
+}
+
+// ─── USUARIO BASE (vinculado a Clerk) ────────────────
+
+model User {
+  id        String      @id @default(cuid())
+  clerkId   String      @unique
+  email     String      @unique
+  name      String
+  phone     String?
+  avatarUrl String?
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clientProfile ClientProfile?
+  plannerProfile PlannerProfile?
+  vendorProfile VendorProfile?
+
+  assignedTasks          Task[]               @relation("TaskAssignee")
+  uploadedDocs           Document[]
+  plannerTeamMemberships PlannerTeamMember[]
+
+  @@index([clerkId])
+  @@index([role])
+}
+
+// ─── PERFILES POR ROL ────────────────────────────────
+
+model ClientProfile {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company             String?
+  notes               String?
+  preferredCity       String?
+  preferredGuestRange String?
+  rfc                 String?
+  razonSocial         String?
+  regimenFiscal       String?
+
+  events Event[] @relation("EventClient")
+}
+
+
+model PlannerProfile {
+  id             String              @id @default(cuid())
+  userId         String              @unique
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identityType   PlannerIdentityType @default(COMPANY)
+  businessName   String?
+  bio            String?
+  experience     Int? // Años de experiencia
+  rating         Float?
+  specialties    String[]
+  // Campos empresa
+  website        String?
+  logoUrl        String?
+  rfc            String?
+  razonSocial    String?
+  regimenFiscal  String?
+  coverageCities  String[]
+  maxActiveEvents Int?
+  portfolioUrls   String[]
+  budgetRange     String?
+
+  // Relación de equipo (solo empresas)
+  teamMembers    PlannerTeamMember[]
+
+  events         EventPlanner[]
+}
+
+model PlannerTeamMember {
+  id        String         @id @default(cuid())
+  plannerId String
+  planner   PlannerProfile @relation(fields: [plannerId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  role      String         // "Coordinador", "Asistente", etc.
+
+  @@unique([plannerId, userId])
+}
+
+model VendorProfile {
+  id           String          @id @default(cuid())
+  userId       String          @unique
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName String
+  bio          String?
+  rating       Float?
+  categoryId   String
+  category     VendorCategory  @relation(fields: [categoryId], references: [id])
+
+  services     VendorService[]
+  events       EventVendor[]
+}
+
+// ─── CATEGORÍAS DE PROVEEDOR ─────────────────────────
+
+model VendorCategory {
+  id      String          @id @default(cuid())
+  name    String          @unique  // Catering, Fotografía, Música, etc.
+  icon    String?
+
+  vendors VendorProfile[]
+  services VendorService[]
+}
+
+model VendorService {
+  id          String         @id @default(cuid())
+  vendorId    String
+  vendor      VendorProfile  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    VendorCategory @relation(fields: [categoryId], references: [id])
+  name        String
+  description String?
+  basePrice   Decimal        @db.Decimal(10, 2)
+  currency    String         @default("MXN")
+
+  eventVendors EventVendor[]
+}
+
+// ─── EVENTO ──────────────────────────────────────────
+
+model Event {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  type         EventType   @default(WEDDING)
+  status       EventStatus @default(DRAFT)
+
+  // Fechas
+  eventDate    DateTime
+  endDate      DateTime?
+
+  // Lugar
+  venueName    String?
+  venueAddress String?
+
+  // Capacidad
+  guestCount   Int?
+
+  // Presupuesto total
+  totalBudget  Decimal?    @db.Decimal(12, 2)
+  currency     String      @default("MXN")
+
+  // Cliente dueño del evento
+  clientId     String
+  client       ClientProfile @relation("EventClient", fields: [clientId], references: [id])
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relaciones
+  planners     EventPlanner[]
+  vendors      EventVendor[]
+  tasks        Task[]
+  budgetItems  BudgetItem[]
+  documents    Document[]
+
+  @@index([clientId])
+  @@index([status])
+  @@index([type])
+}
+
+// ─── PLANIFICADORES DEL EVENTO (many-to-many) ────────
+
+model EventPlanner {
+  id        String         @id @default(cuid())
+  eventId   String
+  event     Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  plannerId String
+  planner   PlannerProfile @relation(fields: [plannerId], references: [id])
+  isLead    Boolean        @default(false) // planificador principal
+  assignedAt DateTime      @default(now())
+
+  @@unique([eventId, plannerId])
+}
+
+// ─── PROVEEDORES DEL EVENTO (many-to-many) ───────────
+
+model EventVendor {
+  id           String        @id @default(cuid())
+  eventId      String
+  event        Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendorId     String
+  vendor       VendorProfile @relation(fields: [vendorId], references: [id])
+  serviceId    String?
+  service      VendorService? @relation(fields: [serviceId], references: [id])
+
+  status       VendorStatus  @default(PENDING)
+  agreedPrice  Decimal?      @db.Decimal(10, 2)
+  notes        String?
+  assignedAt   DateTime      @default(now())
+
+  @@unique([eventId, vendorId])
+  @@index([status])
+}
+
+// ─── TAREAS ──────────────────────────────────────────
+
+model Task {
+  id           String       @id @default(cuid())
+  eventId      String
+  event        Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  dueDate      DateTime?
+  status       TaskStatus   @default(TODO)
+  priority     TaskPriority @default(MEDIUM)
+  assignedToId String?
+  assignedTo   User?        @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([eventId, status])
+}
+
+// ─── PRESUPUESTO ─────────────────────────────────────
+
+model BudgetItem {
+  id              String           @id @default(cuid())
+  eventId         String
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  category        String           // Catering, Decoración, etc.
+  description     String
+  estimatedAmount Decimal          @db.Decimal(10, 2)
+  actualAmount    Decimal?         @db.Decimal(10, 2)
+  status          BudgetItemStatus @default(ESTIMATED)
+  createdAt       DateTime         @default(now())
+
+  @@index([eventId])
+}
+
+// ─── DOCUMENTOS ──────────────────────────────────────
+
+model Document {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  name         String
+  url          String
+  type         String   // contrato, imagen, propuesta, etc.
+  sizeBytes    Int?
+  createdAt    DateTime @default(now())
+
+  @@index([eventId])
+}
