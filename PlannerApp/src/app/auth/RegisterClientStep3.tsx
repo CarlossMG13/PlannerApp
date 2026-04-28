@@ -10,19 +10,18 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
 import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { EventTypeCard } from "@/components/ui/EventTypeCard";
 import { colors, shadow } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
+import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
 type Props = {
   navigation: NativeStackNavigationProp<
     RootStackParamList,
     "RegisterClientStep3"
   >;
-  route: RouteProp<RootStackParamList, "RegisterClientStep3">;
 };
 
 const EVENT_TYPES = [
@@ -56,9 +55,9 @@ const EVENT_TYPES = [
   },
 ];
 
-export function RegisterClientStep3({ navigation, route }: Props) {
-  const { name, preferredCity, preferredGuestRange } = route.params;
+export function RegisterClientStep3({ navigation }: Props) {
   const [selected, setSelected] = useState<string[]>(["WEDDING"]);
+  const { mergeDraft } = useOnboardingDraft();
 
   const toggleType = (value: string) => {
     setSelected((prev) =>
@@ -70,12 +69,8 @@ export function RegisterClientStep3({ navigation, route }: Props) {
 
   const handleContinue = () => {
     if (!canContinue) return;
-    navigation.navigate("RegisterClientStep4", {
-      name,
-      preferredCity,
-      preferredGuestRange,
-      eventTypes: selected,
-    });
+    mergeDraft({ eventTypes: selected });
+    navigation.navigate("RegisterClientStep4");
   };
 
   return (
@@ -188,7 +183,7 @@ export function RegisterClientStep3({ navigation, route }: Props) {
           <AppButton
             label="Continuar"
             onPress={handleContinue}
-            style={[styles.continueButton, { opacity: canContinue ? 1 : 0.5 }]}
+            style={[styles.continueButton, { opacity: canContinue ? 1 : 0.5 }] as any}
             rightElement={
               <Ionicons name="arrow-forward" size={18} color="#fff" />
             }

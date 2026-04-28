@@ -26,6 +26,7 @@ type Props = {
 };
 
 import { MEXICO_STATES } from "@/constants/mexicoStates";
+import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
 const GUEST_RANGES = [
   { label: "10 - 50", sublabel: "Íntimo", value: "10-50" },
@@ -39,17 +40,15 @@ export function RegisterClientStep2({ navigation }: Props) {
   const [city, setCity] = useState("");
   const [guestRange, setGuestRange] = useState("");
   const [showPicker, setShowPicker] = useState(false);
+  const { mergeDraft } = useOnboardingDraft();
 
   const canContinue =
     name.trim().length > 0 && city !== "" && guestRange !== "";
 
   const handleContinue = () => {
     if (!canContinue) return;
-    navigation.navigate("RegisterClientStep3", {
-      name,
-      preferredCity: city,
-      preferredGuestRange: guestRange,
-    });
+    mergeDraft({ name, preferredCity: city, preferredGuestRange: guestRange });
+    navigation.navigate("RegisterClientStep3");
   };
 
   return (

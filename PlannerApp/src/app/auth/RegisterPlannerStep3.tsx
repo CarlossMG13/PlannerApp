@@ -14,18 +14,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import * as ImagePicker from "expo-image-picker";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
 import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { colors, radius, shadow } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
+import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
 type Props = {
   navigation: NativeStackNavigationProp<
     RootStackParamList,
     "RegisterPlannerStep3"
   >;
-  route: RouteProp<RootStackParamList, "RegisterPlannerStep3">;
 };
 
 const BUDGET_RANGES = [
@@ -38,8 +37,8 @@ const BUDGET_RANGES = [
 
 const BIO_MAX = 250;
 
-export function RegisterPlannerStep3({ navigation, route }: Props) {
-  const params = route.params;
+export function RegisterPlannerStep3({ navigation }: Props) {
+  const { mergeDraft } = useOnboardingDraft();
 
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
   const [budgetRange, setBudgetRange] = useState("");
@@ -79,7 +78,8 @@ export function RegisterPlannerStep3({ navigation, route }: Props) {
 
   const handleContinue = () => {
     if (!canContinue) return;
-    // navigation.navigate('RegisterPlannerStep4', { ...params, portfolioImages, budgetRange, bio })
+    mergeDraft({ portfolioImages, budgetRange, bio });
+    navigation.navigate("RegisterPlannerStep4");
   };
 
   return (

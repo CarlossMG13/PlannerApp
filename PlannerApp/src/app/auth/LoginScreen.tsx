@@ -5,11 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   Alert,
 } from "react-native";
-import { useSignIn, useOAuth } from "@clerk/clerk-expo";
-import * as WebBrowser from "expo-web-browser";
+import { useSignIn } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppInput } from "@/components/ui/AppInput";
@@ -18,7 +16,7 @@ import { colors, radius, shadow } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
 import { MotiView } from "moti";
 
-WebBrowser.maybeCompleteAuthSession();
+// TODO post-MVP: rehabilitar OAuth (Google / Apple) con useOAuth de @clerk/clerk-expo
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Login">;
@@ -26,10 +24,6 @@ type Props = {
 
 export function LoginScreen({ navigation }: Props) {
   const { signIn, setActive, isLoaded } = useSignIn();
-  const { startOAuthFlow: googleOAuth } = useOAuth({
-    strategy: "oauth_google",
-  });
-  const { startOAuthFlow: appleOAuth } = useOAuth({ strategy: "oauth_apple" });
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,28 +42,6 @@ export function LoginScreen({ navigation }: Props) {
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const { createdSessionId, setActive: setOAuthActive } =
-        await googleOAuth();
-      if (createdSessionId)
-        await setOAuthActive!({ session: createdSessionId });
-    } catch (err) {
-      Alert.alert("Error", "No se pudo iniciar sesión con Google");
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    try {
-      const { createdSessionId, setActive: setOAuthActive } =
-        await appleOAuth();
-      if (createdSessionId)
-        await setOAuthActive!({ session: createdSessionId });
-    } catch (err) {
-      Alert.alert("Error", "No se pudo iniciar sesión con Apple");
     }
   };
 
@@ -148,52 +120,6 @@ export function LoginScreen({ navigation }: Props) {
         />
       </MotiView>
 
-      {/* Divider */}
-      <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ type: "timing", duration: 400, delay: 350 }}
-        style={styles.divider}
-      >
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>O CONTINUAR CON</Text>
-        <View style={styles.dividerLine} />
-      </MotiView>
-
-      {/* Social Buttons */}
-      <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ type: "timing", duration: 400, delay: 350 }}
-        style={styles.socialRow}
-      >
-        <AppButton
-          label="Google"
-          variant="outline"
-          onPress={handleGoogleLogin}
-          style={styles.socialButton}
-          leftElement={
-            <Image
-              source={{ uri: "https://www.google.com/favicon.ico" }}
-              style={styles.socialIcon}
-            />
-          }
-        />
-        <AppButton
-          label="Apple"
-          variant="outline"
-          onPress={handleAppleLogin}
-          style={styles.socialButton}
-          leftElement={
-            <Ionicons
-              name="phone-portrait-outline"
-              size={20}
-              color={colors.textMain}
-            />
-          }
-        />
-      </MotiView>
-
       {/* Spacer */}
       <View style={styles.spacer} />
 
@@ -255,23 +181,6 @@ const styles = StyleSheet.create({
   forgotPassword: { alignSelf: "flex-end" },
   forgotText: { fontSize: 12, fontWeight: "700", color: colors.primary },
   loginButton: { marginTop: 4 },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    marginVertical: 24,
-    gap: 12,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: colors.textMuted,
-    letterSpacing: 2,
-  },
-  socialRow: { flexDirection: "row", width: "100%", gap: 12 },
-  socialButton: { flex: 1 },
-  socialIcon: { width: 18, height: 18 },
   spacer: { flex: 1, minHeight: 32 },
   registerRow: {
     flexDirection: "row",

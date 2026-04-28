@@ -14,8 +14,9 @@ import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { colors, shadow } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
+import { useOnboardingDraft, OnboardingRole } from "@/hooks/useOnboardingDraft";
 
-type Role = "CLIENT" | "PLANNER" | "VENDOR";
+type Role = OnboardingRole;
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, "Register">;
@@ -50,13 +51,14 @@ const CARDS = [
 
 export function RegisterScreen({ navigation }: Props) {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const { setRole } = useOnboardingDraft();
 
   const handleContinue = () => {
     if (!selectedRole) return;
-    if (selectedRole === "CLIENT")
-      navigation.navigate("RegisterClientStep2", {});
-    if (selectedRole === "PLANNER")
-      navigation.navigate("RegisterPlannerStep2", {});
+    setRole(selectedRole);
+    if (selectedRole === "CLIENT") navigation.navigate("RegisterClientStep2");
+    if (selectedRole === "PLANNER") navigation.navigate("RegisterPlannerStep2");
+    if (selectedRole === "VENDOR") navigation.navigate("RegisterVendorStep2");
   };
 
   return (

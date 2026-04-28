@@ -13,8 +13,6 @@ import { MotiView } from "moti";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { CheckboxRow } from "@/components/ui/CheckboxRow";
 import { colors, radius, shadow } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
 import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
@@ -22,54 +20,45 @@ import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 type Props = {
   navigation: NativeStackNavigationProp<
     RootStackParamList,
-    "RegisterPlannerStep2"
+    "RegisterVendorStep2"
   >;
 };
 
-const IDENTITY_OPTIONS = [
-  { label: "Empresa", value: "COMPANY" },
-  { label: "Independiente", value: "INDEPENDENT" },
+const VENDOR_CATEGORIES = [
+  { value: "CATERING", icon: "restaurant-outline" as const, label: "Catering" },
+  { value: "PHOTOGRAPHY", icon: "camera-outline" as const, label: "Fotografía" },
+  { value: "VIDEO", icon: "videocam-outline" as const, label: "Video" },
+  { value: "MUSIC", icon: "musical-notes-outline" as const, label: "Música" },
+  { value: "DECORATION", icon: "color-palette-outline" as const, label: "Decoración" },
+  { value: "VENUE", icon: "home-outline" as const, label: "Salón / Venue" },
+  { value: "FLOWERS", icon: "leaf-outline" as const, label: "Flores" },
+  { value: "LIGHTING", icon: "flashlight-outline" as const, label: "Iluminación" },
+  { value: "TRANSPORT", icon: "car-outline" as const, label: "Transporte" },
+  { value: "BEAUTY", icon: "brush-outline" as const, label: "Belleza" },
+  { value: "ENTERTAINMENT", icon: "happy-outline" as const, label: "Entretenimiento" },
+  { value: "STATIONERY", icon: "mail-outline" as const, label: "Papelería" },
+  { value: "SECURITY", icon: "shield-outline" as const, label: "Seguridad" },
+  { value: "OTHER", icon: "ellipsis-horizontal-outline" as const, label: "Otro" },
 ];
 
-const EVENT_SPECIALTIES = [
-  { value: "WEDDING", icon: "heart-outline" as const, label: "Bodas" },
-  {
-    value: "CORPORATE",
-    icon: "briefcase-outline" as const,
-    label: "Corporativos",
-  },
-  { value: "SOCIAL", icon: "people-outline" as const, label: "Sociales" },
-];
+const BIO_MAX = 200;
 
-export function RegisterPlannerStep2({ navigation }: Props) {
-  const [identityType, setIdentityType] = useState("COMPANY");
-  const [businessName, setBusinessName] = useState("");
-  const [experience, setExperience] = useState("");
-  const [specialties, setSpecialties] = useState<string[]>([]);
+export function RegisterVendorStep2({ navigation }: Props) {
   const { mergeDraft } = useOnboardingDraft();
 
-  const toggleSpecialty = (value: string) => {
-    setSpecialties((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
-    );
-  };
-
-  const nameLabel =
-    identityType === "COMPANY" ? "Nombre de la Empresa" : "Nombre Completo";
-  const namePlaceholder =
-    identityType === "COMPANY"
-      ? "Ej: Eventos Brillantes S.A."
-      : "Ej: Ana García";
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [vendorBio, setVendorBio] = useState("");
 
   const canContinue =
+    selectedCategory !== "" &&
     businessName.trim().length > 0 &&
-    experience.trim().length > 0 &&
-    specialties.length > 0;
+    vendorBio.trim().length > 0;
 
   const handleContinue = () => {
     if (!canContinue) return;
-    mergeDraft({ identityType, businessName, experience: parseInt(experience), specialties });
-    navigation.navigate("RegisterPlannerStep3");
+    mergeDraft({ categoryName: selectedCategory, businessName, vendorBio });
+    navigation.navigate("RegisterVendorStep3");
   };
 
   return (
@@ -87,7 +76,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
         >
           <Ionicons name="chevron-back" size={24} color={colors.textMain} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Registro Planner</Text>
+        <Text style={styles.headerTitle}>Registro Proveedor</Text>
         <View style={styles.headerSpacer} />
       </MotiView>
 
@@ -97,7 +86,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
         animate={{ opacity: 1 }}
         transition={{ type: "timing", duration: 400, delay: 80 }}
       >
-        <StepProgress steps={4} current={2} />
+        <StepProgress steps={3} current={2} />
       </MotiView>
 
       <ScrollView
@@ -113,50 +102,67 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           transition={{ type: "timing", duration: 450, delay: 150 }}
           style={styles.headline}
         >
-          <Text style={styles.title}>Configura tu perfil{"\n"}de Planner</Text>
+          <Text style={styles.title}>Tu negocio{"\n"}en detalle</Text>
           <Text style={styles.subtitle}>
-            Define tu identidad profesional para que los clientes te reconozcan
-            fácilmente.
+            Cuéntanos qué ofreces para conectarte con los eventos perfectos.
           </Text>
         </MotiView>
 
-        {/* Tipo de identidad */}
+        {/* Categoría */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 400, delay: 250 }}
           style={styles.field}
         >
-          <Text style={styles.label}>Tipo de identidad</Text>
-          <SegmentedControl
-            options={IDENTITY_OPTIONS}
-            value={identityType}
-            onChange={setIdentityType}
-          />
+          <Text style={styles.label}>Categoría de servicio</Text>
+          <View style={styles.categoryGrid}>
+            {VENDOR_CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.value;
+              return (
+                <TouchableOpacity
+                  key={cat.value}
+                  style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                  onPress={() => setSelectedCategory(cat.value)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={cat.icon}
+                    size={16}
+                    color={isSelected ? colors.primary : colors.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.categoryLabel,
+                      isSelected && styles.categoryLabelSelected,
+                    ]}
+                  >
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </MotiView>
 
-        {/* Nombre */}
+        {/* Nombre del negocio */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 400, delay: 330 }}
+          transition={{ type: "timing", duration: 400, delay: 350 }}
           style={styles.field}
         >
-          <Text style={styles.label}>{nameLabel}</Text>
+          <Text style={styles.label}>Nombre del Negocio</Text>
           <View style={styles.inputContainer}>
             <Ionicons
-              name={
-                identityType === "COMPANY"
-                  ? "business-outline"
-                  : "person-outline"
-              }
+              name="storefront-outline"
               size={18}
               color={colors.textMuted}
               style={styles.inputIcon}
             />
             <TextInput
               style={styles.textInput}
-              placeholder={namePlaceholder}
+              placeholder="Ej: Fotografía Lumen Studio"
               placeholderTextColor={colors.textMuted}
               value={businessName}
               onChangeText={setBusinessName}
@@ -165,52 +171,33 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           </View>
         </MotiView>
 
-        {/* Años de experiencia */}
+        {/* Bio corta */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 400, delay: 410 }}
+          transition={{ type: "timing", duration: 400, delay: 450 }}
           style={styles.field}
         >
-          <Text style={styles.label}>Años de experiencia</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="time-outline"
-              size={18}
-              color={colors.textMuted}
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.textInput}
-              placeholder="Ej: 5"
-              placeholderTextColor={colors.textMuted}
-              value={experience}
-              onChangeText={(v) => setExperience(v.replace(/[^0-9]/g, ""))}
-              keyboardType="numeric"
-            />
-            <Text style={styles.inputSuffix}>años</Text>
-          </View>
-        </MotiView>
-
-        {/* Especialidades */}
-        <MotiView
-          from={{ opacity: 0, translateY: 12 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 400, delay: 490 }}
-          style={styles.field}
-        >
-          <Text style={styles.label}>Tipos de eventos que gestionas</Text>
-          <View style={styles.checkboxList}>
-            {EVENT_SPECIALTIES.map((item) => (
-              <CheckboxRow
-                key={item.value}
-                icon={item.icon}
-                label={item.label}
-                checked={specialties.includes(item.value)}
-                onPress={() => toggleSpecialty(item.value)}
-              />
-            ))}
-          </View>
+          <Text style={styles.label}>Descripción breve</Text>
+          <TextInput
+            style={styles.bioInput}
+            placeholder="¿Qué te hace especial? Cuéntalo en pocas palabras..."
+            placeholderTextColor={colors.textMuted}
+            multiline
+            numberOfLines={4}
+            maxLength={BIO_MAX}
+            value={vendorBio}
+            onChangeText={setVendorBio}
+            textAlignVertical="top"
+          />
+          <Text
+            style={[
+              styles.charCount,
+              vendorBio.length >= BIO_MAX && styles.charCountLimit,
+            ]}
+          >
+            {vendorBio.length}/{BIO_MAX}
+          </Text>
         </MotiView>
       </ScrollView>
 
@@ -218,7 +205,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
       <MotiView
         from={{ opacity: 0, translateY: 20 }}
         animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", duration: 400, delay: 580 }}
+        transition={{ type: "timing", duration: 400, delay: 550 }}
         style={styles.bottom}
       >
         <AppButton
@@ -229,9 +216,8 @@ export function RegisterPlannerStep2({ navigation }: Props) {
             <Ionicons name="arrow-forward" size={18} color="#fff" />
           }
         />
-        <Text style={styles.hint}>
-          Podrás editar esta información más tarde en la configuración de tu
-          perfil.
+        <Text style={styles.stepIndicator}>
+          Paso 2 de 3: Perfil del Negocio
         </Text>
       </MotiView>
     </SafeAreaView>
@@ -276,6 +262,36 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     marginBottom: 8,
   },
+  categoryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    ...shadow.soft,
+  },
+  categoryChipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: "#f0fdf4",
+  },
+  categoryLabel: {
+    fontSize: 13,
+    color: colors.textMuted,
+    fontWeight: "500",
+  },
+  categoryLabelSelected: {
+    color: colors.primary,
+    fontWeight: "700",
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -293,17 +309,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMain,
   },
-  inputSuffix: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: colors.textMuted,
-  },
-  checkboxList: {
-    backgroundColor: colors.surface,
+  bioInput: {
+    minHeight: 100,
     borderRadius: radius.md,
-    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: 12,
+    fontSize: 14,
+    color: colors.textMain,
+    lineHeight: 22,
     ...shadow.soft,
   },
+  charCount: {
+    fontSize: 11,
+    color: colors.textMuted,
+    textAlign: "right",
+    marginTop: 4,
+    marginRight: 4,
+  },
+  charCountLimit: { color: "#ef4444" },
   bottom: {
     paddingHorizontal: 20,
     paddingBottom: 32,
@@ -311,12 +336,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     ...shadow.soft,
   },
-  hint: {
+  stepIndicator: {
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textMuted,
     marginTop: 12,
-    lineHeight: 16,
-    paddingHorizontal: 16,
   },
 });
