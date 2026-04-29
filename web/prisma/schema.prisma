@@ -8,8 +8,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─── ENUMS ───────────────────────────────────────────
@@ -227,6 +228,7 @@ model Event {
   @@index([clientId])
   @@index([status])
   @@index([type])
+  @@index([eventDate])
 }
 
 // ─── PLANIFICADORES DEL EVENTO (many-to-many) ────────

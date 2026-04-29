@@ -13,7 +13,10 @@ export async function GET() {
         clientProfile: true,
         plannerProfile: true,
         vendorProfile: {
-          include: { category: true },
+          include: {
+            category: true,
+            _count: { select: { services: true } },
+          },
         },
       },
     });
