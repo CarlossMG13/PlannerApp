@@ -14,6 +14,28 @@ export type RootStackParamList = {
   RegisterVendorStep3: undefined;
   // Verificación
   EmailVerification: undefined;
-  // App (post-login)
-  Main: undefined;
+};
+
+export type ClientStackParamList = {
+  ClientTabs: undefined;
+  CreateEvent: undefined;
+  EventDetail: { eventId: string };
+};
+
+export type ClientTabParamList = {
+  ClientHome: undefined;
+  ClientEvents: undefined;
+  ClientProfile: undefined;
+};
+
+export type PlannerTabParamList = {
+  PlannerHome: undefined;
+  PlannerEvents: undefined;
+  PlannerProfile: undefined;
+};
+
+export type VendorTabParamList = {
+  VendorHome: undefined;
+  VendorServices: undefined;
+  VendorProfile: undefined;
 };

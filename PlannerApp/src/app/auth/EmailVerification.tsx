@@ -30,9 +30,12 @@ type Props = {
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+
 export function EmailVerification({ navigation }: Props) {
   const { signUp, setActive } = useSignUp();
-  const { reset } = useOnboardingDraft();
+  const { getToken } = useAuth();
+  const { draft, reset } = useOnboardingDraft();
 
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [verifying, setVerifying] = useState(false);
@@ -107,8 +110,26 @@ export function EmailVerification({ navigation }: Props) {
       });
       if (result.status === "complete") {
         await setActive!({ session: result.createdSessionId });
+
+        const { role, profile } = draft;
+        if (role) {
+          try {
+            const token = await getToken();
+            await fetch(`${API_URL}/api/users/me/profile`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ role, ...profile }),
+            });
+          } catch {
+            // Profile save failure is non-blocking — user can complete profile later
+          }
+        }
+
         reset();
-        navigation.navigate("Main");
+        // RootNavigator detecta isSignedIn y cambia a MainNavigator automáticamente
       } else {
         Alert.alert("Error", "Verificación incompleta. Intenta de nuevo.");
       }
