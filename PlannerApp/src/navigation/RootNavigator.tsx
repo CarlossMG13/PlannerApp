@@ -19,6 +19,7 @@ import { RegisterPlannerStep4 } from "@/app/auth/RegisterPlannerStep4";
 import { RegisterVendorStep2 } from "@/app/auth/RegisterVendorStep2";
 import { RegisterVendorStep3 } from "@/app/auth/RegisterVendorStep3";
 import { EmailVerification } from "@/app/auth/EmailVerification";
+import { TwoFactorScreen } from "@/app/auth/TwoFactorScreen";
 import { OnboardingProvider } from "@/hooks/useOnboardingDraft";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,6 +39,7 @@ function AuthStack() {
         <Stack.Screen name="RegisterVendorStep2" component={RegisterVendorStep2} />
         <Stack.Screen name="RegisterVendorStep3" component={RegisterVendorStep3} />
         <Stack.Screen name="EmailVerification" component={EmailVerification} />
+        <Stack.Screen name="TwoFactor" component={TwoFactorScreen} />
       </Stack.Navigator>
     </OnboardingProvider>
   );

@@ -4,9 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -36,7 +36,7 @@ const EVENT_TYPES = [
   {
     value: "BIRTHDAY",
     icon: "gift-outline" as const,
-    title: "CumpleaÃ±os",
+    title: "Cumpleaños",
     description: "Fiestas infantiles y de adultos",
     disabled: true,
   },
@@ -51,7 +51,7 @@ const EVENT_TYPES = [
     value: "SOCIAL",
     icon: "sparkles-outline" as const,
     title: "Galas Sociales",
-    description: "Eventos benÃ©ficos y alfombras rojas",
+    description: "Eventos benéficos y alfombras rojas",
     disabled: true,
   },
 ];
@@ -115,7 +115,7 @@ export function RegisterClientStep3({ navigation }: Props) {
           style={styles.headline}
         >
           <Text style={styles.title}>
-            Â¿QuÃ© tipo de eventos{"\n"}te interesan?
+            ¿Qué tipo de eventos{"\n"}te interesan?
           </Text>
           <Text style={styles.subtitle}>
             Selecciona todas las opciones que encajen con lo que buscas.
@@ -135,8 +135,8 @@ export function RegisterClientStep3({ navigation }: Props) {
             color="#92400e"
           />
           <Text style={styles.infoText}>
-            En esta versiÃ³n inicial solo estÃ¡ disponible la categorÃ­a de Bodas.
-            MÃ¡s categorÃ­as prÃ³ximamente.
+            En esta versión inicial solo está disponible la categoría de Bodas.
+            Más categorías próximamente.
           </Text>
         </MotiView>
 

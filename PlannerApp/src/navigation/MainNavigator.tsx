@@ -9,10 +9,14 @@ import { useUserStore } from "@/store/userStore";
 import { colors } from "@/constants/theme";
 
 import { ClientDashboardScreen } from "@/app/client/ClientDashboardScreen";
+import { ClientEventsScreen } from "@/app/client/ClientEventsScreen";
 import { PlannerDashboardScreen } from "@/app/planner/PlannerDashboardScreen";
+import { PlannerEventsScreen } from "@/app/planner/PlannerEventsScreen";
 import { VendorDashboardScreen } from "@/app/vendor/VendorDashboardScreen";
+import { VendorServicesScreen } from "@/app/vendor/VendorServicesScreen";
 import { CreateEventScreen } from "@/app/client/CreateEventScreen";
 import { EventDetailScreen } from "@/app/client/EventDetailScreen";
+import { ProfileScreen } from "@/app/shared/ProfileScreen";
 
 import {
   ClientStackParamList,
@@ -65,8 +69,8 @@ function ClientTabs() {
       })}
     >
       <ClientTab.Screen name="ClientHome" component={ClientDashboardScreen} options={{ title: "Inicio" }} />
-      <ClientTab.Screen name="ClientEvents" component={PlaceholderScreen} options={{ title: "Eventos" }} />
-      <ClientTab.Screen name="ClientProfile" component={PlaceholderScreen} options={{ title: "Perfil" }} />
+      <ClientTab.Screen name="ClientEvents" component={ClientEventsScreen} options={{ title: "Eventos" }} />
+      <ClientTab.Screen name="ClientProfile" component={ProfileScreen} options={{ title: "Perfil" }} />
     </ClientTab.Navigator>
   );
 }
@@ -85,6 +89,7 @@ function PlannerNavigator() {
   return (
     <PlannerStack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
       <PlannerStack.Screen name="PlannerTabs" component={PlannerTabs} />
+      <PlannerStack.Screen name="CreateEvent" component={CreateEventScreen} />
       <PlannerStack.Screen name="EventDetail" component={EventDetailScreen} />
     </PlannerStack.Navigator>
   );
@@ -110,8 +115,8 @@ function PlannerTabs() {
       })}
     >
       <PlannerTab.Screen name="PlannerHome" component={PlannerDashboardScreen} options={{ title: "Inicio" }} />
-      <PlannerTab.Screen name="PlannerEvents" component={PlaceholderScreen} options={{ title: "Eventos" }} />
-      <PlannerTab.Screen name="PlannerProfile" component={PlaceholderScreen} options={{ title: "Perfil" }} />
+      <PlannerTab.Screen name="PlannerEvents" component={PlannerEventsScreen} options={{ title: "Eventos" }} />
+      <PlannerTab.Screen name="PlannerProfile" component={ProfileScreen} options={{ title: "Perfil" }} />
     </PlannerTab.Navigator>
   );
 }
@@ -136,8 +141,8 @@ function VendorTabs() {
       })}
     >
       <VendorTab.Screen name="VendorHome" component={VendorDashboardScreen} options={{ title: "Inicio" }} />
-      <VendorTab.Screen name="VendorServices" component={PlaceholderScreen} options={{ title: "Servicios" }} />
-      <VendorTab.Screen name="VendorProfile" component={PlaceholderScreen} options={{ title: "Perfil" }} />
+      <VendorTab.Screen name="VendorServices" component={VendorServicesScreen} options={{ title: "Servicios" }} />
+      <VendorTab.Screen name="VendorProfile" component={ProfileScreen} options={{ title: "Perfil" }} />
     </VendorTab.Navigator>
   );
 }

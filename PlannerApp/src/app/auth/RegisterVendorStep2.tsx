@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   TextInput,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -27,17 +27,17 @@ type Props = {
 
 const VENDOR_CATEGORIES = [
   { value: "CATERING", icon: "restaurant-outline" as const, label: "Catering" },
-  { value: "PHOTOGRAPHY", icon: "camera-outline" as const, label: "FotografÃ­a" },
+  { value: "PHOTOGRAPHY", icon: "camera-outline" as const, label: "Fotografía" },
   { value: "VIDEO", icon: "videocam-outline" as const, label: "Video" },
-  { value: "MUSIC", icon: "musical-notes-outline" as const, label: "MÃºsica" },
-  { value: "DECORATION", icon: "color-palette-outline" as const, label: "DecoraciÃ³n" },
-  { value: "VENUE", icon: "home-outline" as const, label: "SalÃ³n / Venue" },
+  { value: "MUSIC", icon: "musical-notes-outline" as const, label: "Música" },
+  { value: "DECORATION", icon: "color-palette-outline" as const, label: "Decoración" },
+  { value: "VENUE", icon: "home-outline" as const, label: "Salón / Venue" },
   { value: "FLOWERS", icon: "leaf-outline" as const, label: "Flores" },
-  { value: "LIGHTING", icon: "flashlight-outline" as const, label: "IluminaciÃ³n" },
+  { value: "LIGHTING", icon: "flashlight-outline" as const, label: "Iluminación" },
   { value: "TRANSPORT", icon: "car-outline" as const, label: "Transporte" },
   { value: "BEAUTY", icon: "brush-outline" as const, label: "Belleza" },
   { value: "ENTERTAINMENT", icon: "happy-outline" as const, label: "Entretenimiento" },
-  { value: "STATIONERY", icon: "mail-outline" as const, label: "PapelerÃ­a" },
+  { value: "STATIONERY", icon: "mail-outline" as const, label: "Papelería" },
   { value: "SECURITY", icon: "shield-outline" as const, label: "Seguridad" },
   { value: "OTHER", icon: "ellipsis-horizontal-outline" as const, label: "Otro" },
 ];
@@ -92,7 +92,7 @@ export function RegisterVendorStep2({ navigation }: Props) {
 
       <ScrollView
         style={styles.scroll}
-        
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -105,18 +105,18 @@ export function RegisterVendorStep2({ navigation }: Props) {
         >
           <Text style={styles.title}>Tu negocio{"\n"}en detalle</Text>
           <Text style={styles.subtitle}>
-            CuÃ©ntanos quÃ© ofreces para conectarte con los eventos perfectos.
+            Cuéntanos qué ofreces para conectarte con los eventos perfectos.
           </Text>
         </MotiView>
 
-        {/* CategorÃ­a */}
+        {/* Categoría */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 400, delay: 250 }}
           style={styles.field}
         >
-          <Text style={styles.label}>CategorÃ­a de servicio</Text>
+          <Text style={styles.label}>Categoría de servicio</Text>
           <View style={styles.categoryGrid}>
             {VENDOR_CATEGORIES.map((cat) => {
               const isSelected = selectedCategory === cat.value;
@@ -163,7 +163,7 @@ export function RegisterVendorStep2({ navigation }: Props) {
             />
             <TextInput
               style={styles.textInput}
-              placeholder="Ej: FotografÃ­a Lumen Studio"
+              placeholder="Ej: Fotografía Lumen Studio"
               placeholderTextColor={colors.textMuted}
               value={businessName}
               onChangeText={setBusinessName}
@@ -179,10 +179,10 @@ export function RegisterVendorStep2({ navigation }: Props) {
           transition={{ type: "timing", duration: 400, delay: 450 }}
           style={styles.field}
         >
-          <Text style={styles.label}>DescripciÃ³n breve</Text>
+          <Text style={styles.label}>Descripción breve</Text>
           <TextInput
             style={styles.bioInput}
-            placeholder="Â¿QuÃ© te hace especial? CuÃ©ntalo en pocas palabras..."
+            placeholder="¿Qué te hace especial? Cuéntalo en pocas palabras..."
             placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={4}

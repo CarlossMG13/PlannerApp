@@ -31,16 +31,33 @@ export function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleEmailLogin = async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || !signIn) {
+      Alert.alert("Error", "Clerk no está listo aún, intenta de nuevo.");
+      return;
+    }
+    if (!email || !password) {
+      Alert.alert("Error", "Ingresa tu correo y contraseña.");
+      return;
+    }
     setLoading(true);
     try {
-      const result = await signIn.create({ identifier: email, password });
-      await setActive({ session: result.createdSessionId });
+      const result = await signIn.create({ identifier: email.trim(), password });
+      console.log("[Login] status:", result.status, "sessionId:", result.createdSessionId);
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+      } else if (result.status === "needs_second_factor") {
+        navigation.navigate("TwoFactor");
+      } else {
+        Alert.alert("Verificación requerida", `Estado: ${result.status}`);
+      }
     } catch (err: any) {
-      Alert.alert(
-        "Error",
-        err.errors?.[0]?.message ?? "No se pudo iniciar sesión",
-      );
+      console.log("[Login] error:", JSON.stringify(err));
+      const msg =
+        err?.errors?.[0]?.longMessage ??
+        err?.errors?.[0]?.message ??
+        err?.message ??
+        "No se pudo iniciar sesión";
+      Alert.alert("Error al iniciar sesión", msg);
     } finally {
       setLoading(false);
     }
@@ -62,7 +79,7 @@ export function LoginScreen({ navigation }: Props) {
         <View style={styles.logoBox}>
           <Ionicons name="sparkles" size={28} color="#fff" />
         </View>
-        <Text style={styles.appName}>EventPlan</Text>
+        <Text style={styles.appName}>Plania</Text>
         <Text style={styles.appSubtitle}>Elite Planning Suite</Text>
       </MotiView>
 
@@ -90,7 +107,7 @@ export function LoginScreen({ navigation }: Props) {
           <Text style={styles.label}>Correo electrónico</Text>
           <AppInput
             leftIcon="mail-outline"
-            placeholder="ejemplo@eventplan.com"
+            placeholder="ejemplo@plania.mx"
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}

@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   TextInput,
   Image,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import * as ImagePicker from "expo-image-picker";
@@ -33,7 +33,7 @@ const BUDGET_RANGES = [
   { label: "$5,000 - $15,000", value: "2" },
   { label: "$15,000 - $50,000", value: "3" },
   { label: "$50,000 - $100,000", value: "4" },
-  { label: "MÃ¡s de $100,000", value: "5" },
+  { label: "Más de $100,000", value: "5" },
 ];
 
 const BIO_MAX = 250;
@@ -53,7 +53,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
     if (status !== "granted") {
       Alert.alert(
         "Permiso requerido",
-        "Necesitamos acceso a tu galerÃ­a para subir el portafolio.",
+        "Necesitamos acceso a tu galería para subir el portafolio.",
       );
       return;
     }
@@ -154,7 +154,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
                 />
               </View>
               <Text style={styles.uploadTitle}>Toca para subir</Text>
-              <Text style={styles.uploadSubtitle}>ImÃ¡genes (MÃ¡x. 10)</Text>
+              <Text style={styles.uploadSubtitle}>Imágenes (Máx. 10)</Text>
             </TouchableOpacity>
           ) : (
             <View>
@@ -180,7 +180,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
                 )}
               </View>
               <Text style={styles.imageCount}>
-                {portfolioImages.length}/10 imÃ¡genes
+                {portfolioImages.length}/10 imágenes
               </Text>
             </View>
           )}
@@ -259,7 +259,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
             </MotiView>
           )}
           <Text style={styles.hint}>
-            Esto ayuda a filtrar clientes segÃºn su presupuesto disponible.
+            Esto ayuda a filtrar clientes según su presupuesto disponible.
           </Text>
         </MotiView>
 
@@ -273,7 +273,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
           <Text style={styles.label}>Breve Bio Profesional</Text>
           <TextInput
             style={styles.bioInput}
-            placeholder="CuÃ©ntanos sobre tu experiencia, estilo y lo que te hace Ãºnico como Planner..."
+            placeholder="Cuéntanos sobre tu experiencia, estilo y lo que te hace único como Planner..."
             placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={4}

@@ -1,13 +1,13 @@
-import React from "react";
+﻿import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { useNavigation } from "@react-navigation/native";
@@ -80,9 +80,15 @@ export function PlannerDashboardScreen() {
             </Text>
             <Text style={styles.subGreeting}>Panel de planificación</Text>
           </View>
-          <View style={styles.avatarBox}>
-            <Ionicons name="briefcase" size={20} color={colors.primary} />
-          </View>
+          <TouchableOpacity
+            style={styles.newEventBtn}
+            onPress={() => navigation.navigate("CreateEvent")}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Crear nuevo evento"
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
         </MotiView>
 
         {/* Stats row */}
@@ -137,10 +143,18 @@ export function PlannerDashboardScreen() {
               <View style={styles.emptyIconBox}>
                 <Ionicons name="albums" size={36} color={colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>Sin eventos asignados</Text>
+              <Text style={styles.emptyTitle}>Sin eventos aún</Text>
               <Text style={styles.emptySubtitle}>
-                Los eventos que los clientes te asignen aparecerán aquí.
+                Crea tu primer evento o espera a que un cliente te asigne uno.
               </Text>
+              <TouchableOpacity
+                style={styles.emptyCtaBtn}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate("CreateEvent")}
+              >
+                <Ionicons name="add-circle-outline" size={16} color="#fff" />
+                <Text style={styles.emptyCtaText}>Crear evento</Text>
+              </TouchableOpacity>
             </View>
           )}
         </MotiView>
@@ -274,15 +288,14 @@ const styles = StyleSheet.create({
   },
   greeting: { fontSize: 24, fontWeight: "800", color: colors.textMain },
   subGreeting: { fontSize: 14, color: colors.textMuted, marginTop: 2 },
-  avatarBox: {
+  newEventBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#f0fdf4",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: colors.primary,
+    ...shadow.primary,
   },
 
   statsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
@@ -346,6 +359,17 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingHorizontal: 16,
   },
+  emptyCtaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+  },
+  emptyCtaText: { fontSize: 13, fontWeight: "700", color: "#fff" },
 
   eventRow: {
     flexDirection: "row",

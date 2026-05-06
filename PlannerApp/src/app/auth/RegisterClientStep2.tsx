@@ -4,9 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
@@ -31,7 +31,7 @@ import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
 const GUEST_RANGES = [
   { label: "10 - 50", sublabel: "Ãntimo", value: "10-50" },
-  { label: "50 - 150", sublabel: "EstÃ¡ndar", value: "50-150" },
+  { label: "50 - 150", sublabel: "Estándar", value: "50-150" },
   { label: "150 - 300", sublabel: "Grande", value: "150-300" },
   { label: "300+", sublabel: "Masivo", value: "300+" },
 ];
@@ -93,10 +93,10 @@ export function RegisterClientStep2({ navigation }: Props) {
           transition={{ type: "timing", duration: 450, delay: 150 }}
           style={styles.headline}
         >
-          <Text style={styles.title}>CuÃ©ntanos un poco{"\n"}sobre ti</Text>
+          <Text style={styles.title}>Cuéntanos un poco{"\n"}sobre ti</Text>
           <Text style={styles.subtitle}>
-            Esta informaciÃ³n nos ayudarÃ¡ a personalizar las recomendaciones para
-            tu prÃ³ximo gran evento.
+            Esta información nos ayudará a personalizar las recomendaciones para
+            tu próximo gran evento.
           </Text>
         </MotiView>
 
@@ -110,7 +110,7 @@ export function RegisterClientStep2({ navigation }: Props) {
           <Text style={styles.label}>Nombre Completo</Text>
           <AppInput
             leftIcon="person-outline"
-            placeholder="Ej. Ximena GonzÃ¡lez"
+            placeholder="Ej. Ximena González"
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
@@ -225,7 +225,7 @@ export function RegisterClientStep2({ navigation }: Props) {
           }
         />
         <Text style={styles.stepIndicator}>
-          Paso 2 de 4: InformaciÃ³n Personal
+          Paso 2 de 4: Información Personal
         </Text>
       </MotiView>
     </SafeAreaView>

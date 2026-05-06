@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,49 +12,65 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
-import { useSignUp } from "@clerk/clerk-expo";
+import { useSignIn } from "@clerk/clerk-expo";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useAuth } from "@clerk/clerk-expo";
 import { AppButton } from "@/components/ui/AppButton";
 import { colors, radius, shadow } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
-import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
 type Props = {
-  navigation: NativeStackNavigationProp<
-    RootStackParamList,
-    "EmailVerification"
-  >;
+  navigation: NativeStackNavigationProp<RootStackParamList, "TwoFactor">;
 };
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
-
-export function EmailVerification({ navigation }: Props) {
-  const { signUp, setActive } = useSignUp();
-  const { getToken } = useAuth();
-  const { draft, reset } = useOnboardingDraft();
+export function TwoFactorScreen({ navigation }: Props) {
+  const { signIn, setActive, isLoaded } = useSignIn();
 
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [verifying, setVerifying] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(RESEND_COOLDOWN);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [resending, setResending] = useState(false);
 
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const maskedEmail = signUp?.emailAddress
-    ? maskEmail(signUp.emailAddress)
-    : "tu correo";
+  // Detect second factor strategy from the in-progress signIn object
+  const secondFactors = signIn?.supportedSecondFactors ?? [];
+  const totpFactor = secondFactors.find((f) => f.strategy === "totp");
+  const emailFactor = secondFactors.find((f) => f.strategy === "email_code") as
+    | { strategy: "email_code"; emailAddressId: string }
+    | undefined;
+  const phoneFactor = secondFactors.find((f) => f.strategy === "phone_code") as
+    | { strategy: "phone_code"; phoneNumberId: string }
+    | undefined;
 
+  const strategy: string = totpFactor
+    ? "totp"
+    : emailFactor
+    ? "email_code"
+    : phoneFactor
+    ? "phone_code"
+    : "totp";
+
+  const isEmailOrPhone = strategy === "email_code" || strategy === "phone_code";
+
+  // Prepare email/phone factor on mount so a code is sent
   useEffect(() => {
-    startCooldown();
-    return () => {
-      if (cooldownRef.current) clearInterval(cooldownRef.current);
-    };
-  }, []);
+    if (!isLoaded || !signIn) return;
+    if (strategy === "email_code" && emailFactor) {
+      signIn
+        .prepareSecondFactor({ strategy: "email_code", emailAddressId: emailFactor.emailAddressId })
+        .then(() => startCooldown())
+        .catch(() => {});
+    } else if (strategy === "phone_code" && phoneFactor) {
+      signIn
+        .prepareSecondFactor({ strategy: "phone_code", phoneNumberId: phoneFactor.phoneNumberId })
+        .then(() => startCooldown())
+        .catch(() => {});
+    }
+  }, [isLoaded]);
 
   function startCooldown() {
     setResendCooldown(RESEND_COOLDOWN);
@@ -67,12 +83,6 @@ export function EmailVerification({ navigation }: Props) {
         return prev - 1;
       });
     }, 1000);
-  }
-
-  function maskEmail(email: string) {
-    const [user, domain] = email.split("@");
-    const visible = user.slice(0, 2);
-    return `${visible}${"*".repeat(Math.max(user.length - 2, 3))}@${domain}`;
   }
 
   const fullCode = code.join("");
@@ -102,39 +112,20 @@ export function EmailVerification({ navigation }: Props) {
   };
 
   const verifyCode = async (codeStr: string) => {
-    if (!signUp || codeStr.length !== CODE_LENGTH) return;
+    if (!signIn || codeStr.length !== CODE_LENGTH) return;
     setVerifying(true);
     try {
-      const result = await signUp.attemptEmailAddressVerification({
+      const result = await signIn.attemptSecondFactor({
+        strategy: strategy as any,
         code: codeStr,
       });
       if (result.status === "complete") {
         await setActive!({ session: result.createdSessionId });
-
-        const { role, profile } = draft;
-        if (role) {
-          try {
-            const token = await getToken();
-            await fetch(`${API_URL}/api/users/me/profile`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ role, ...profile }),
-            });
-          } catch {
-            // Profile save failure is non-blocking — user can complete profile later
-          }
-        }
-
-        reset();
-        // RootNavigator detecta isSignedIn y cambia a MainNavigator automáticamente
       } else {
-        Alert.alert("Error", "Verificación incompleta. Intenta de nuevo.");
+        Alert.alert("Error", `Estado inesperado: ${result.status}`);
       }
     } catch (err: any) {
-      const msg = err.errors?.[0]?.message ?? "Código incorrecto";
+      const msg = err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "Código incorrecto";
       Alert.alert("Código inválido", msg);
       setCode(Array(CODE_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
@@ -144,21 +135,30 @@ export function EmailVerification({ navigation }: Props) {
   };
 
   const handleResend = async () => {
-    if (resendCooldown > 0 || !signUp) return;
+    if (resendCooldown > 0 || !signIn) return;
     setResending(true);
     try {
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      if (strategy === "email_code" && emailFactor) {
+        await signIn.prepareSecondFactor({ strategy: "email_code", emailAddressId: emailFactor.emailAddressId });
+      } else if (strategy === "phone_code" && phoneFactor) {
+        await signIn.prepareSecondFactor({ strategy: "phone_code", phoneNumberId: phoneFactor.phoneNumberId });
+      }
       startCooldown();
     } catch (err: any) {
-      Alert.alert("Error", err.errors?.[0]?.message ?? "No se pudo reenviar");
+      Alert.alert("Error", err?.errors?.[0]?.message ?? "No se pudo reenviar");
     } finally {
       setResending(false);
     }
   };
 
-  const handleVerifyPress = () => {
-    if (isComplete) verifyCode(fullCode);
-  };
+  const subtitle =
+    strategy === "totp"
+      ? "Ingresa el código de 6 dígitos de tu aplicación autenticadora (Google Authenticator, Authy, etc.)"
+      : strategy === "email_code"
+      ? "Ingresa el código de 6 dígitos que enviamos a tu correo electrónico"
+      : "Ingresa el código de 6 dígitos que enviamos a tu teléfono";
+
+  const iconName = strategy === "totp" ? "shield-checkmark" : "mail";
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -168,14 +168,17 @@ export function EmailVerification({ navigation }: Props) {
         transition={{ type: "timing", duration: 500 }}
         style={styles.container}
       >
-        {/* Icon */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color={colors.textMain} />
+        </TouchableOpacity>
+
         <MotiView
           from={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", delay: 100, damping: 14, stiffness: 130 }}
           style={styles.iconBox}
         >
-          <Ionicons name="mail" size={40} color={colors.primary} />
+          <Ionicons name={iconName} size={40} color={colors.primary} />
         </MotiView>
 
         <MotiView
@@ -183,14 +186,10 @@ export function EmailVerification({ navigation }: Props) {
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 400, delay: 200 }}
         >
-          <Text style={styles.title}>Revisa tu correo</Text>
-          <Text style={styles.subtitle}>
-            Ingresa el código de 6 dígitos que enviamos a{"\n"}
-            <Text style={styles.email}>{maskedEmail}</Text>
-          </Text>
+          <Text style={styles.title}>Verificación en{"\n"}dos pasos</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
         </MotiView>
 
-        {/* OTP inputs */}
         <MotiView
           from={{ opacity: 0, translateY: 16 }}
           animate={{ opacity: 1, translateY: 0 }}
@@ -201,10 +200,7 @@ export function EmailVerification({ navigation }: Props) {
             <TextInput
               key={i}
               ref={(el) => { inputRefs.current[i] = el; }}
-              style={[
-                styles.otpCell,
-                digit !== "" && styles.otpCellFilled,
-              ]}
+              style={[styles.otpCell, digit !== "" && styles.otpCellFilled]}
               value={digit}
               onChangeText={(t) => handleDigit(t, i)}
               onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, i)}
@@ -227,7 +223,6 @@ export function EmailVerification({ navigation }: Props) {
           </MotiView>
         )}
 
-        {/* Verify button */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
@@ -235,36 +230,34 @@ export function EmailVerification({ navigation }: Props) {
           style={styles.buttonWrap}
         >
           <AppButton
-            label="Verificar código"
-            onPress={handleVerifyPress}
+            label="Verificar"
+            onPress={() => { if (isComplete) verifyCode(fullCode); }}
             loading={verifying}
             style={{ opacity: isComplete && !verifying ? 1 : 0.5 }}
-            rightElement={
-              <Ionicons name="checkmark-circle" size={18} color="#fff" />
-            }
+            rightElement={<Ionicons name="checkmark-circle" size={18} color="#fff" />}
           />
         </MotiView>
 
-        {/* Resend */}
-        <MotiView
-          from={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: "timing", duration: 400, delay: 560 }}
-          style={styles.resendRow}
-        >
-          {resendCooldown > 0 ? (
-            <Text style={styles.resendCooldown}>
-              Reenviar en{" "}
-              <Text style={styles.resendTimer}>{resendCooldown}s</Text>
-            </Text>
-          ) : (
-            <TouchableOpacity onPress={handleResend} disabled={resending}>
-              <Text style={styles.resendLink}>
-                {resending ? "Enviando..." : "Reenviar código"}
+        {isEmailOrPhone && (
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: "timing", duration: 400, delay: 560 }}
+            style={styles.resendRow}
+          >
+            {resendCooldown > 0 ? (
+              <Text style={styles.resendCooldown}>
+                Reenviar en <Text style={styles.resendTimer}>{resendCooldown}s</Text>
               </Text>
-            </TouchableOpacity>
-          )}
-        </MotiView>
+            ) : (
+              <TouchableOpacity onPress={handleResend} disabled={resending}>
+                <Text style={styles.resendLink}>
+                  {resending ? "Enviando..." : "Reenviar código"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </MotiView>
+        )}
       </MotiView>
     </SafeAreaView>
   );
@@ -277,6 +270,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 28,
+  },
+  backBtn: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    padding: 8,
   },
   iconBox: {
     width: 80,
@@ -301,10 +300,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 32,
-  },
-  email: {
-    fontWeight: "700",
-    color: colors.textMain,
   },
   otpRow: {
     flexDirection: "row",
@@ -334,28 +329,10 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  verifyingText: {
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  buttonWrap: {
-    width: "100%",
-    marginBottom: 20,
-  },
-  resendRow: {
-    alignItems: "center",
-  },
-  resendCooldown: {
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  resendTimer: {
-    fontWeight: "700",
-    color: colors.textMain,
-  },
-  resendLink: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.primary,
-  },
+  verifyingText: { fontSize: 13, color: colors.textMuted },
+  buttonWrap: { width: "100%", marginBottom: 20 },
+  resendRow: { alignItems: "center" },
+  resendCooldown: { fontSize: 13, color: colors.textMuted },
+  resendTimer: { fontWeight: "700", color: colors.textMain },
+  resendLink: { fontSize: 13, fontWeight: "700", color: colors.primary },
 });

@@ -14,6 +14,7 @@ export type RootStackParamList = {
   RegisterVendorStep3: undefined;
   // Verificación
   EmailVerification: undefined;
+  TwoFactor: undefined;
 };
 
 export type ClientStackParamList = {
@@ -30,6 +31,7 @@ export type ClientTabParamList = {
 
 export type PlannerStackParamList = {
   PlannerTabs: undefined;
+  CreateEvent: undefined;
   EventDetail: { eventId: string };
 };
 

@@ -1,19 +1,18 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "@clerk/clerk-expo";
 
 import { colors, radius } from "@/constants/theme";
@@ -23,12 +22,9 @@ import { AppInput } from "@/components/ui/AppInput";
 import { EventTypeCard } from "@/components/ui/EventTypeCard";
 import { GuestRangeCard } from "@/components/ui/GuestRangeCard";
 import { StepProgress } from "@/components/ui/StepProgress";
-import { ClientStackParamList } from "@/navigation/types";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 const TOTAL_STEPS = 4;
-
-type Nav = NativeStackNavigationProp<ClientStackParamList, "CreateEvent">;
 
 type EventType = "WEDDING" | "CORPORATE" | "BIRTHDAY" | "SOCIAL" | "OTHER";
 
@@ -129,7 +125,7 @@ function DatePicker({ day, month, year, onDayChange, onMonthChange, onYearChange
 // ─── Main Screen ──────────────────────────────────────
 
 export function CreateEventScreen() {
-  const navigation = useNavigation<Nav>();
+  const navigation = useNavigation();
   const { getToken } = useAuth();
 
   const [step, setStep] = useState(1);

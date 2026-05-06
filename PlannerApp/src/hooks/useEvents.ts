@@ -32,28 +32,32 @@ export function useEvents() {
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = await getToken();
-      const res = await fetch(`${API_URL}/api/events`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al cargar eventos");
-      const data = await res.json();
-      setEvents(data.events ?? []);
-    } catch (e) {
-      setError((e as Error).message ?? "Error desconocido");
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken]);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = await getToken();
+        const res = await fetch(`${API_URL}/api/events`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Error al cargar eventos");
+        const data = await res.json();
+        if (!cancelled) setEvents(data.events ?? []);
+      } catch (e) {
+        if (!cancelled) setError((e as Error).message ?? "Error desconocido");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [tick]);
 
-  return { events, loading, error, refetch: loadEvents };
+  const refetch = useCallback(() => setTick((t) => t + 1), []);
+
+  return { events, loading, error, refetch };
 }

@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   TextInput,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -60,7 +60,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
   const namePlaceholder =
     identityType === "COMPANY"
       ? "Ej: Eventos Brillantes S.A."
-      : "Ej: Ana GarcÃ­a";
+      : "Ej: Ana García";
 
   const canContinue =
     businessName.trim().length > 0 &&
@@ -117,7 +117,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           <Text style={styles.title}>Configura tu perfil{"\n"}de Planner</Text>
           <Text style={styles.subtitle}>
             Define tu identidad profesional para que los clientes te reconozcan
-            fÃ¡cilmente.
+            fácilmente.
           </Text>
         </MotiView>
 
@@ -166,14 +166,14 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           </View>
         </MotiView>
 
-        {/* AÃ±os de experiencia */}
+        {/* Años de experiencia */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 400, delay: 410 }}
           style={styles.field}
         >
-          <Text style={styles.label}>AÃ±os de experiencia</Text>
+          <Text style={styles.label}>Años de experiencia</Text>
           <View style={styles.inputContainer}>
             <Ionicons
               name="time-outline"
@@ -189,7 +189,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
               onChangeText={(v) => setExperience(v.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
             />
-            <Text style={styles.inputSuffix}>aÃ±os</Text>
+            <Text style={styles.inputSuffix}>años</Text>
           </View>
         </MotiView>
 
@@ -231,7 +231,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           }
         />
         <Text style={styles.hint}>
-          PodrÃ¡s editar esta informaciÃ³n mÃ¡s tarde en la configuraciÃ³n de tu
+          Podrás editar esta información más tarde en la configuración de tu
           perfil.
         </Text>
       </MotiView>

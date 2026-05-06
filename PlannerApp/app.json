@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "PlannerApp",
-    "slug": "PlannerApp",
+    "name": "Plania",
+    "slug": "plania",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
