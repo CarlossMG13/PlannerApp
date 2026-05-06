@@ -14,6 +14,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "@clerk/clerk-expo";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import {
   useEventDetail,
   EventDetail,
@@ -21,6 +22,8 @@ import {
 } from "@/hooks/useEventDetail";
 import { AssignPlannerModal } from "./AssignPlannerModal";
 import { TaskListScreen } from "./TaskListScreen";
+import { BudgetScreen } from "./BudgetScreen";
+import { VendorListScreen } from "./VendorListScreen";
 import { ClientStackParamList } from "@/navigation/types";
 
 type Nav = NativeStackNavigationProp<ClientStackParamList>;
@@ -180,33 +183,26 @@ export function EventDetailScreen() {
       {/* Tab content */}
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {activeTab === "resumen" && (
-          <ResumeTab
-            event={event}
-            onAssignPlanner={() => setShowPlannerModal(true)}
-            onPlannerRemoved={refetch}
-          />
-        )}
-        {activeTab === "tareas" && (
-          <TaskListScreen eventId={event.id} />
-        )}
-        {activeTab === "presupuesto" && (
-          <PlaceholderTab
-            icon="wallet-outline"
-            label="Presupuesto"
-            subtitle="Control de presupuesto disponible en la próxima versión"
-          />
-        )}
-        {activeTab === "proveedores" && (
-          <PlaceholderTab
-            icon="briefcase-outline"
-            label="Proveedores"
-            subtitle="Directorio de proveedores disponible en la próxima versión"
-          />
-        )}
+        <View style={styles.content}>
+          {activeTab === "resumen" && (
+            <ResumeTab
+              event={event}
+              onAssignPlanner={() => setShowPlannerModal(true)}
+              onPlannerRemoved={refetch}
+            />
+          )}
+          {activeTab === "tareas" && (
+            <TaskListScreen eventId={event.id} />
+          )}
+          {activeTab === "presupuesto" && (
+            <BudgetScreen eventId={event.id} />
+          )}
+          {activeTab === "proveedores" && (
+            <VendorListScreen eventId={event.id} />
+          )}
+        </View>
       </ScrollView>
 
       <AssignPlannerModal
@@ -556,7 +552,7 @@ const styles = StyleSheet.create({
   tabLabelActive: { color: colors.primary },
 
   scroll: { flex: 1 },
-  content: { padding: 16, gap: 14, paddingBottom: 40 },
+  content: { padding: 16, gap: 14, paddingBottom: 40, ...centered },
 
   card: {
     backgroundColor: colors.surface,

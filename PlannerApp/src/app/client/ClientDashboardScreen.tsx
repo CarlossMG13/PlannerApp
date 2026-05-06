@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useUserStore } from "@/store/userStore";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { useEvents, EventSummary, EventStatus } from "@/hooks/useEvents";
 import { ClientStackParamList } from "@/navigation/types";
 
@@ -60,9 +61,9 @@ export function ClientDashboardScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.content}>
         {/* Header */}
         <MotiView
           from={{ opacity: 0, translateY: -12 }}
@@ -174,6 +175,7 @@ export function ClientDashboardScreen() {
           <TipRow icon="cart-outline" text="Agrega proveedores: catering, música, fotos" />
           <TipRow icon="wallet-outline" text="Controla tu presupuesto en tiempo real" isLast />
         </MotiView>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -238,7 +240,7 @@ function TipRow({ icon, text, isLast }: { icon: any; text: string; isLast?: bool
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 },
+  content: { paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8, ...centered },
 
   header: {
     flexDirection: "row",

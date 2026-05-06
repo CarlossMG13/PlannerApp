@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { useUserStore } from "@/store/userStore";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { useEvents, EventSummary } from "@/hooks/useEvents";
 
 const firstName = (name: string) => name.split(" ")[0];
@@ -40,9 +41,9 @@ export function VendorDashboardScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.content}>
         {/* Header */}
         <MotiView
           from={{ opacity: 0, translateY: -12 }}
@@ -210,6 +211,7 @@ export function VendorDashboardScreen() {
             <ActionButton icon="stats-chart-outline" label="Estadísticas" />
           </View>
         </MotiView>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -289,7 +291,7 @@ function ActionButton({ icon, label }: { icon: any; label: string }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 },
+  content: { paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8, ...centered },
 
   header: {
     flexDirection: "row",

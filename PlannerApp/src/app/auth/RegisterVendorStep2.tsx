@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { RootStackParamList } from "@/navigation/types";
 import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
@@ -26,17 +27,17 @@ type Props = {
 
 const VENDOR_CATEGORIES = [
   { value: "CATERING", icon: "restaurant-outline" as const, label: "Catering" },
-  { value: "PHOTOGRAPHY", icon: "camera-outline" as const, label: "Fotografía" },
+  { value: "PHOTOGRAPHY", icon: "camera-outline" as const, label: "FotografÃ­a" },
   { value: "VIDEO", icon: "videocam-outline" as const, label: "Video" },
-  { value: "MUSIC", icon: "musical-notes-outline" as const, label: "Música" },
-  { value: "DECORATION", icon: "color-palette-outline" as const, label: "Decoración" },
-  { value: "VENUE", icon: "home-outline" as const, label: "Salón / Venue" },
+  { value: "MUSIC", icon: "musical-notes-outline" as const, label: "MÃºsica" },
+  { value: "DECORATION", icon: "color-palette-outline" as const, label: "DecoraciÃ³n" },
+  { value: "VENUE", icon: "home-outline" as const, label: "SalÃ³n / Venue" },
   { value: "FLOWERS", icon: "leaf-outline" as const, label: "Flores" },
-  { value: "LIGHTING", icon: "flashlight-outline" as const, label: "Iluminación" },
+  { value: "LIGHTING", icon: "flashlight-outline" as const, label: "IluminaciÃ³n" },
   { value: "TRANSPORT", icon: "car-outline" as const, label: "Transporte" },
   { value: "BEAUTY", icon: "brush-outline" as const, label: "Belleza" },
   { value: "ENTERTAINMENT", icon: "happy-outline" as const, label: "Entretenimiento" },
-  { value: "STATIONERY", icon: "mail-outline" as const, label: "Papelería" },
+  { value: "STATIONERY", icon: "mail-outline" as const, label: "PapelerÃ­a" },
   { value: "SECURITY", icon: "shield-outline" as const, label: "Seguridad" },
   { value: "OTHER", icon: "ellipsis-horizontal-outline" as const, label: "Otro" },
 ];
@@ -91,7 +92,7 @@ export function RegisterVendorStep2({ navigation }: Props) {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -104,18 +105,18 @@ export function RegisterVendorStep2({ navigation }: Props) {
         >
           <Text style={styles.title}>Tu negocio{"\n"}en detalle</Text>
           <Text style={styles.subtitle}>
-            Cuéntanos qué ofreces para conectarte con los eventos perfectos.
+            CuÃ©ntanos quÃ© ofreces para conectarte con los eventos perfectos.
           </Text>
         </MotiView>
 
-        {/* Categoría */}
+        {/* CategorÃ­a */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 400, delay: 250 }}
           style={styles.field}
         >
-          <Text style={styles.label}>Categoría de servicio</Text>
+          <Text style={styles.label}>CategorÃ­a de servicio</Text>
           <View style={styles.categoryGrid}>
             {VENDOR_CATEGORIES.map((cat) => {
               const isSelected = selectedCategory === cat.value;
@@ -162,7 +163,7 @@ export function RegisterVendorStep2({ navigation }: Props) {
             />
             <TextInput
               style={styles.textInput}
-              placeholder="Ej: Fotografía Lumen Studio"
+              placeholder="Ej: FotografÃ­a Lumen Studio"
               placeholderTextColor={colors.textMuted}
               value={businessName}
               onChangeText={setBusinessName}
@@ -178,10 +179,10 @@ export function RegisterVendorStep2({ navigation }: Props) {
           transition={{ type: "timing", duration: 400, delay: 450 }}
           style={styles.field}
         >
-          <Text style={styles.label}>Descripción breve</Text>
+          <Text style={styles.label}>DescripciÃ³n breve</Text>
           <TextInput
             style={styles.bioInput}
-            placeholder="¿Qué te hace especial? Cuéntalo en pocas palabras..."
+            placeholder="Â¿QuÃ© te hace especial? CuÃ©ntalo en pocas palabras..."
             placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={4}
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { width: 40 },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 16 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 16, ...centered },
   headline: { marginTop: 8, marginBottom: 28 },
   title: {
     fontSize: 28,
@@ -343,3 +344,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
+
+
+

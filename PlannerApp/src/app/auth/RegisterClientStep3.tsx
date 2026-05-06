@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { EventTypeCard } from "@/components/ui/EventTypeCard";
 import { colors, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { RootStackParamList } from "@/navigation/types";
 import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
@@ -35,7 +36,7 @@ const EVENT_TYPES = [
   {
     value: "BIRTHDAY",
     icon: "gift-outline" as const,
-    title: "Cumpleaños",
+    title: "CumpleaÃ±os",
     description: "Fiestas infantiles y de adultos",
     disabled: true,
   },
@@ -50,7 +51,7 @@ const EVENT_TYPES = [
     value: "SOCIAL",
     icon: "sparkles-outline" as const,
     title: "Galas Sociales",
-    description: "Eventos benéficos y alfombras rojas",
+    description: "Eventos benÃ©ficos y alfombras rojas",
     disabled: true,
   },
 ];
@@ -103,7 +104,7 @@ export function RegisterClientStep3({ navigation }: Props) {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        
         showsVerticalScrollIndicator={false}
       >
         {/* Headline */}
@@ -114,7 +115,7 @@ export function RegisterClientStep3({ navigation }: Props) {
           style={styles.headline}
         >
           <Text style={styles.title}>
-            ¿Qué tipo de eventos{"\n"}te interesan?
+            Â¿QuÃ© tipo de eventos{"\n"}te interesan?
           </Text>
           <Text style={styles.subtitle}>
             Selecciona todas las opciones que encajen con lo que buscas.
@@ -134,8 +135,8 @@ export function RegisterClientStep3({ navigation }: Props) {
             color="#92400e"
           />
           <Text style={styles.infoText}>
-            En esta versión inicial solo está disponible la categoría de Bodas.
-            Más categorías próximamente.
+            En esta versiÃ³n inicial solo estÃ¡ disponible la categorÃ­a de Bodas.
+            MÃ¡s categorÃ­as prÃ³ximamente.
           </Text>
         </MotiView>
 
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { width: 40 },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 16 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 16, ...centered },
   headline: { marginTop: 8, marginBottom: 16 },
   title: {
     fontSize: 28,
@@ -267,3 +268,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
+
+
+

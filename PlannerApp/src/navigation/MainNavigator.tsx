@@ -17,11 +17,13 @@ import { EventDetailScreen } from "@/app/client/EventDetailScreen";
 import {
   ClientStackParamList,
   ClientTabParamList,
+  PlannerStackParamList,
   PlannerTabParamList,
   VendorTabParamList,
 } from "./types";
 
 const ClientStack = createNativeStackNavigator<ClientStackParamList>();
+const PlannerStack = createNativeStackNavigator<PlannerStackParamList>();
 const ClientTab = createBottomTabNavigator<ClientTabParamList>();
 const PlannerTab = createBottomTabNavigator<PlannerTabParamList>();
 const VendorTab = createBottomTabNavigator<VendorTabParamList>();
@@ -76,6 +78,15 @@ function ClientNavigator() {
       <ClientStack.Screen name="CreateEvent" component={CreateEventScreen} />
       <ClientStack.Screen name="EventDetail" component={EventDetailScreen} />
     </ClientStack.Navigator>
+  );
+}
+
+function PlannerNavigator() {
+  return (
+    <PlannerStack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+      <PlannerStack.Screen name="PlannerTabs" component={PlannerTabs} />
+      <PlannerStack.Screen name="EventDetail" component={EventDetailScreen} />
+    </PlannerStack.Navigator>
   );
 }
 
@@ -147,7 +158,7 @@ export function MainNavigator() {
     );
   }
 
-  if (user.role === "PLANNER") return <PlannerTabs />;
+  if (user.role === "PLANNER") return <PlannerNavigator />;
   if (user.role === "VENDOR") return <VendorTabs />;
   return <ClientNavigator />;
 }

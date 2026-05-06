@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { StepProgress } from "@/components/ui/StepProgress";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { CheckboxRow } from "@/components/ui/CheckboxRow";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { RootStackParamList } from "@/navigation/types";
 import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
@@ -59,7 +60,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
   const namePlaceholder =
     identityType === "COMPANY"
       ? "Ej: Eventos Brillantes S.A."
-      : "Ej: Ana García";
+      : "Ej: Ana GarcÃ­a";
 
   const canContinue =
     businessName.trim().length > 0 &&
@@ -116,7 +117,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           <Text style={styles.title}>Configura tu perfil{"\n"}de Planner</Text>
           <Text style={styles.subtitle}>
             Define tu identidad profesional para que los clientes te reconozcan
-            fácilmente.
+            fÃ¡cilmente.
           </Text>
         </MotiView>
 
@@ -165,14 +166,14 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           </View>
         </MotiView>
 
-        {/* Años de experiencia */}
+        {/* AÃ±os de experiencia */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 400, delay: 410 }}
           style={styles.field}
         >
-          <Text style={styles.label}>Años de experiencia</Text>
+          <Text style={styles.label}>AÃ±os de experiencia</Text>
           <View style={styles.inputContainer}>
             <Ionicons
               name="time-outline"
@@ -188,7 +189,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
               onChangeText={(v) => setExperience(v.replace(/[^0-9]/g, ""))}
               keyboardType="numeric"
             />
-            <Text style={styles.inputSuffix}>años</Text>
+            <Text style={styles.inputSuffix}>aÃ±os</Text>
           </View>
         </MotiView>
 
@@ -230,7 +231,7 @@ export function RegisterPlannerStep2({ navigation }: Props) {
           }
         />
         <Text style={styles.hint}>
-          Podrás editar esta información más tarde en la configuración de tu
+          PodrÃ¡s editar esta informaciÃ³n mÃ¡s tarde en la configuraciÃ³n de tu
           perfil.
         </Text>
       </MotiView>
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { width: 40 },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 16 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 16, ...centered },
   headline: { marginTop: 8, marginBottom: 28 },
   title: {
     fontSize: 28,
@@ -320,3 +321,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
 });
+
+
+
+

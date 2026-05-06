@@ -10,9 +10,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useUserStore } from "@/store/userStore";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { useEvents, EventSummary, EventStatus } from "@/hooks/useEvents";
+import { PlannerStackParamList } from "@/navigation/types";
 
 const firstName = (name: string) => name.split(" ")[0];
 
@@ -40,7 +44,10 @@ function formatDate(dateStr: string) {
   });
 }
 
+type Nav = NativeStackNavigationProp<PlannerStackParamList>;
+
 export function PlannerDashboardScreen() {
+  const navigation = useNavigation<Nav>();
   const { user } = useUserStore();
   const { events, loading: eventsLoading, error: eventsError, refetch } = useEvents();
 
@@ -57,9 +64,9 @@ export function PlannerDashboardScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.content}>
         {/* Header */}
         <MotiView
           from={{ opacity: 0, translateY: -12 }}
@@ -118,7 +125,12 @@ export function PlannerDashboardScreen() {
             <ErrorRow message={eventsError} onRetry={refetch} />
           ) : events.length > 0 ? (
             events.map((ev, i) => (
-              <EventRow key={ev.id} event={ev} isLast={i === events.length - 1} />
+              <EventRow
+                key={ev.id}
+                event={ev}
+                isLast={i === events.length - 1}
+                onPress={() => navigation.navigate("EventDetail", { eventId: ev.id })}
+              />
             ))
           ) : (
             <View style={styles.emptyState}>
@@ -179,6 +191,7 @@ export function PlannerDashboardScreen() {
             <ActionButton icon="stats-chart-outline" label="Reportes" />
           </View>
         </MotiView>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -206,13 +219,14 @@ function StatCard({ icon, label, value }: { icon: any; label: string; value: str
   );
 }
 
-function EventRow({ event, isLast }: { event: EventSummary; isLast?: boolean }) {
+function EventRow({ event, isLast, onPress }: { event: EventSummary; isLast?: boolean; onPress?: () => void }) {
   const statusColor = STATUS_COLOR[event.status] ?? "#94a3b8";
   const clientName = event.client?.user?.name;
   return (
     <TouchableOpacity
       style={[styles.eventRow, isLast && styles.eventRowLast]}
       activeOpacity={0.7}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Ver evento ${event.title}`}
     >
@@ -249,7 +263,7 @@ function ActionButton({ icon, label }: { icon: any; label: string }) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8 },
+  content: { paddingHorizontal: 20, paddingBottom: 32, paddingTop: 8, ...centered },
 
   header: {
     flexDirection: "row",

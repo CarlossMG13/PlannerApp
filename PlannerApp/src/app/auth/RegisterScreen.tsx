@@ -13,6 +13,7 @@ import { RoleCard } from "@/components/ui/RoleCard";
 import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { colors, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { RootStackParamList } from "@/navigation/types";
 import { useOnboardingDraft, OnboardingRole } from "@/hooks/useOnboardingDraft";
 
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
     color: colors.textMain,
   },
   headerSpacer: { width: 40 },
-  content: { flex: 1, paddingHorizontal: 20 },
+  content: { flex: 1, paddingHorizontal: 20, ...centered },
   headline: { marginTop: 8, marginBottom: 28 },
   title: {
     fontSize: 28,

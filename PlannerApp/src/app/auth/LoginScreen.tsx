@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppInput } from "@/components/ui/AppInput";
 import { AppButton } from "@/components/ui/AppButton";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centeredAuth } from "@/utils/responsive";
 import { RootStackParamList } from "@/navigation/types";
 import { MotiView } from "moti";
 
@@ -141,6 +142,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 48,
     alignItems: "center",
+    ...centeredAuth,
   },
   logoSection: { alignItems: "center", marginBottom: 40 },
   logoBox: {

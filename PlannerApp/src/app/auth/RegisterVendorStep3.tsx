@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { AppInput } from "@/components/ui/AppInput";
 import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { RootStackParamList } from "@/navigation/types";
 import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
@@ -31,7 +32,7 @@ const REGIMENES = [
   { label: "Sueldos y Salarios", value: "605" },
   { label: "Arrendamiento", value: "606" },
   { label: "Actividades Empresariales y Profesionales", value: "612" },
-  { label: "Incorporación Fiscal", value: "621" },
+  { label: "IncorporaciÃ³n Fiscal", value: "621" },
   { label: "RESICO", value: "626" },
 ];
 
@@ -108,7 +109,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -118,7 +119,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
           transition={{ type: "timing", duration: 450, delay: 150 }}
           style={styles.headline}
         >
-          <Text style={styles.title}>Seguridad y{"\n"}Facturación</Text>
+          <Text style={styles.title}>Seguridad y{"\n"}FacturaciÃ³n</Text>
           <Text style={styles.subtitle}>
             Protege tu cuenta y configura tus datos fiscales si los necesitas.
           </Text>
@@ -137,7 +138,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Correo Electrónico</Text>
+            <Text style={styles.label}>Correo ElectrÃ³nico</Text>
             <AppInput
               leftIcon="mail-outline"
               placeholder="correo@ejemplo.com"
@@ -147,42 +148,42 @@ export function RegisterVendorStep3({ navigation }: Props) {
               onChangeText={setEmail}
             />
             {email.length > 0 && !emailValid && (
-              <Text style={styles.errorText}>Ingresa un correo válido</Text>
+              <Text style={styles.errorText}>Ingresa un correo vÃ¡lido</Text>
             )}
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Crear Contraseña</Text>
+            <Text style={styles.label}>Crear ContraseÃ±a</Text>
             <AppInput
               leftIcon="lock-closed-outline"
-              placeholder="Mínimo 8 caracteres"
+              placeholder="MÃ­nimo 8 caracteres"
               isPassword
               value={password}
               onChangeText={setPassword}
             />
             {password.length > 0 && !passwordValid && (
               <Text style={styles.errorText}>
-                La contraseña debe tener al menos 8 caracteres
+                La contraseÃ±a debe tener al menos 8 caracteres
               </Text>
             )}
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Confirmar Contraseña</Text>
+            <Text style={styles.label}>Confirmar ContraseÃ±a</Text>
             <AppInput
               leftIcon="lock-closed-outline"
-              placeholder="Repite tu contraseña"
+              placeholder="Repite tu contraseÃ±a"
               isPassword
               value={confirmPassword}
               onChangeText={setConfirmPassword}
             />
             {confirmPassword.length > 0 && !passwordsMatch && (
-              <Text style={styles.errorText}>Las contraseñas no coinciden</Text>
+              <Text style={styles.errorText}>Las contraseÃ±as no coinciden</Text>
             )}
           </View>
         </MotiView>
 
-        {/* Facturación */}
+        {/* FacturaciÃ³n */}
         <MotiView
           from={{ opacity: 0, translateY: 12 }}
           animate={{ opacity: 1, translateY: 0 }}
@@ -191,7 +192,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
         >
           <View style={styles.sectionHeader}>
             <Ionicons name="document-text" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Datos de Facturación</Text>
+            <Text style={styles.sectionTitle}>Datos de FacturaciÃ³n</Text>
             <View style={styles.optionalBadge}>
               <Text style={styles.optionalText}>Opcional</Text>
             </View>
@@ -209,7 +210,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Razón Social</Text>
+            <Text style={styles.label}>RazÃ³n Social</Text>
             <AppInput
               leftIcon="business-outline"
               placeholder="Nombre legal o empresa"
@@ -219,7 +220,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Régimen Fiscal</Text>
+            <Text style={styles.label}>RÃ©gimen Fiscal</Text>
             <TouchableOpacity
               style={styles.pickerButton}
               onPress={() => setShowRegimen(!showRegimen)}
@@ -238,7 +239,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
                 ]}
               >
                 {REGIMENES.find((r) => r.value === regimenFiscal)?.label ||
-                  "Selecciona una opción"}
+                  "Selecciona una opciÃ³n"}
               </Text>
               <Ionicons
                 name={showRegimen ? "chevron-up" : "chevron-down"}
@@ -287,7 +288,7 @@ export function RegisterVendorStep3({ navigation }: Props) {
           </View>
         </MotiView>
 
-        {/* Términos */}
+        {/* TÃ©rminos */}
         <MotiView
           from={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -302,8 +303,8 @@ export function RegisterVendorStep3({ navigation }: Props) {
           />
           <Text style={styles.termsText}>
             Acepto los{" "}
-            <Text style={styles.termsLink}>Términos y Condiciones</Text> y la{" "}
-            <Text style={styles.termsLink}>Política de Privacidad</Text>.
+            <Text style={styles.termsLink}>TÃ©rminos y Condiciones</Text> y la{" "}
+            <Text style={styles.termsLink}>PolÃ­tica de Privacidad</Text>.
           </Text>
         </MotiView>
       </ScrollView>
@@ -349,7 +350,7 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { width: 40 },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 16 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 16, ...centered },
   headline: { marginTop: 8, marginBottom: 20 },
   title: {
     fontSize: 28,
@@ -457,3 +458,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
+
+
+

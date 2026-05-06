@@ -28,6 +28,11 @@ export type ClientTabParamList = {
   ClientProfile: undefined;
 };
 
+export type PlannerStackParamList = {
+  PlannerTabs: undefined;
+  EventDetail: { eventId: string };
+};
+
 export type PlannerTabParamList = {
   PlannerHome: undefined;
   PlannerEvents: undefined;

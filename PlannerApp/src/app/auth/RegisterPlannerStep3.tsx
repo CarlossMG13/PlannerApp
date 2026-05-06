@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppButton } from "@/components/ui/AppButton";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { colors, radius, shadow } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { RootStackParamList } from "@/navigation/types";
 import { useOnboardingDraft } from "@/hooks/useOnboardingDraft";
 
@@ -32,7 +33,7 @@ const BUDGET_RANGES = [
   { label: "$5,000 - $15,000", value: "2" },
   { label: "$15,000 - $50,000", value: "3" },
   { label: "$50,000 - $100,000", value: "4" },
-  { label: "Más de $100,000", value: "5" },
+  { label: "MÃ¡s de $100,000", value: "5" },
 ];
 
 const BIO_MAX = 250;
@@ -52,7 +53,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
     if (status !== "granted") {
       Alert.alert(
         "Permiso requerido",
-        "Necesitamos acceso a tu galería para subir el portafolio.",
+        "Necesitamos acceso a tu galerÃ­a para subir el portafolio.",
       );
       return;
     }
@@ -153,7 +154,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
                 />
               </View>
               <Text style={styles.uploadTitle}>Toca para subir</Text>
-              <Text style={styles.uploadSubtitle}>Imágenes (Máx. 10)</Text>
+              <Text style={styles.uploadSubtitle}>ImÃ¡genes (MÃ¡x. 10)</Text>
             </TouchableOpacity>
           ) : (
             <View>
@@ -179,7 +180,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
                 )}
               </View>
               <Text style={styles.imageCount}>
-                {portfolioImages.length}/10 imágenes
+                {portfolioImages.length}/10 imÃ¡genes
               </Text>
             </View>
           )}
@@ -258,7 +259,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
             </MotiView>
           )}
           <Text style={styles.hint}>
-            Esto ayuda a filtrar clientes según su presupuesto disponible.
+            Esto ayuda a filtrar clientes segÃºn su presupuesto disponible.
           </Text>
         </MotiView>
 
@@ -272,7 +273,7 @@ export function RegisterPlannerStep3({ navigation }: Props) {
           <Text style={styles.label}>Breve Bio Profesional</Text>
           <TextInput
             style={styles.bioInput}
-            placeholder="Cuéntanos sobre tu experiencia, estilo y lo que te hace único como Planner..."
+            placeholder="CuÃ©ntanos sobre tu experiencia, estilo y lo que te hace Ãºnico como Planner..."
             placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={4}
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { width: 40 },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 16 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 16, ...centered },
   headline: { marginTop: 8, marginBottom: 28 },
   title: {
     fontSize: 28,
@@ -490,3 +491,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
+
+
+

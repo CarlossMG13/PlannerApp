@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "@clerk/clerk-expo";
 
 import { colors, radius } from "@/constants/theme";
+import { centered } from "@/utils/responsive";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppInput } from "@/components/ui/AppInput";
 import { EventTypeCard } from "@/components/ui/EventTypeCard";
@@ -230,36 +231,37 @@ export function CreateEventScreen() {
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <MotiView
-            key={step}
-            from={{ opacity: 0, translateX: 24 }}
-            animate={{ opacity: 1, translateX: 0 }}
-            transition={{ type: "timing", duration: 260 }}
-          >
-            {step === 1 && <StepType selected={eventType} onSelect={setEventType} />}
-            {step === 2 && (
-              <StepDetails
-                title={title} onTitleChange={setTitle}
-                day={day} month={month} year={year}
-                onDayChange={setDay} onMonthChange={setMonth} onYearChange={setYear}
-                formattedDate={formattedDate}
-              />
-            )}
-            {step === 3 && (
-              <StepVenue
-                venueName={venueName} onVenueNameChange={setVenueName}
-                venueAddress={venueAddress} onVenueAddressChange={setVenueAddress}
-                guestCount={guestCount} onGuestCountChange={setGuestCount}
-              />
-            )}
-            {step === 4 && (
-              <StepBudget budget={totalBudget} onBudgetChange={setTotalBudget} />
-            )}
-          </MotiView>
+          <View style={styles.content}>
+            <MotiView
+              key={step}
+              from={{ opacity: 0, translateX: 24 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: "timing", duration: 260 }}
+            >
+              {step === 1 && <StepType selected={eventType} onSelect={setEventType} />}
+              {step === 2 && (
+                <StepDetails
+                  title={title} onTitleChange={setTitle}
+                  day={day} month={month} year={year}
+                  onDayChange={setDay} onMonthChange={setMonth} onYearChange={setYear}
+                  formattedDate={formattedDate}
+                />
+              )}
+              {step === 3 && (
+                <StepVenue
+                  venueName={venueName} onVenueNameChange={setVenueName}
+                  venueAddress={venueAddress} onVenueAddressChange={setVenueAddress}
+                  guestCount={guestCount} onGuestCountChange={setGuestCount}
+                />
+              )}
+              {step === 4 && (
+                <StepBudget budget={totalBudget} onBudgetChange={setTotalBudget} />
+              )}
+            </MotiView>
+          </View>
         </ScrollView>
 
         {/* Footer */}
@@ -442,7 +444,7 @@ function StepBudget({ budget, onBudgetChange }: { budget: string; onBudgetChange
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 24 },
+  content: { paddingHorizontal: 20, paddingBottom: 24, ...centered },
 
   header: {
     flexDirection: "row",
