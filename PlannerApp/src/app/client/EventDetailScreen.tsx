@@ -317,17 +317,25 @@ function ResumeTab({
           style={styles.card}
         >
           <Text style={styles.cardTitle}>Cliente</Text>
-          <View style={styles.plannerRow}>
-            <View style={styles.plannerAvatar}>
-              <Ionicons name="person" size={18} color="#7c3aed" />
+          {event.client ? (
+            <View style={styles.plannerRow}>
+              <View style={styles.plannerAvatar}>
+                <Ionicons name="person" size={18} color="#7c3aed" />
+              </View>
+              <View style={styles.plannerInfo}>
+                <Text style={styles.plannerName}>{event.client.user.name}</Text>
+                <Text style={[styles.plannerName, { fontSize: 12, fontWeight: "400", color: colors.textMuted, marginTop: 2 }]}>
+                  {event.client.user.email}
+                </Text>
+              </View>
             </View>
-            <View style={styles.plannerInfo}>
-              <Text style={styles.plannerName}>{event.client.user.name}</Text>
-              <Text style={[styles.plannerName, { fontSize: 12, fontWeight: "400", color: colors.textMuted, marginTop: 2 }]}>
-                {event.client.user.email}
-              </Text>
+          ) : (
+            <View style={styles.emptyPlanner}>
+              <Ionicons name="person-outline" size={28} color={colors.textMuted} />
+              <Text style={styles.emptyPlannerText}>Evento propio</Text>
+              <Text style={styles.emptyPlannerSub}>Creado directamente por ti</Text>
             </View>
-          </View>
+          )}
         </MotiView>
       ) : (
         <MotiView

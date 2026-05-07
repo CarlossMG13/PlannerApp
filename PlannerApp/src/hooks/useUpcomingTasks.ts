@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 
 export type UpcomingTask = {
@@ -14,6 +14,8 @@ const BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export function useUpcomingTasks() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
   const [tasks, setTasks] = useState<UpcomingTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function useUpcomingTasks() {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const res = await globalThis.fetch(`${BASE}/api/tasks/upcoming`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -34,7 +36,7 @@ export function useUpcomingTasks() {
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => { fetch_(); }, [fetch_]);
 

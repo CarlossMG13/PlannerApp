@@ -161,27 +161,39 @@ export async function POST(req: Request) {
       select: {
         role: true,
         clientProfile: { select: { id: true } },
+        plannerProfile: { select: { id: true } },
       },
     });
 
     if (!user) return notFound("Usuario no encontrado");
-    if (user.role !== "CLIENT" || !user.clientProfile) {
-      return forbidden("Solo clientes pueden crear eventos");
+    const isClient = user.role === "CLIENT" && !!user.clientProfile;
+    const isPlanner = user.role === "PLANNER" && !!user.plannerProfile;
+    if (!isClient && !isPlanner) {
+      return forbidden("Solo clientes y planners pueden crear eventos");
     }
 
+    const eventData = {
+      title: title.trim(),
+      type: type as ValidType,
+      eventDate: parsedDate,
+      status: "DRAFT" as const,
+      clientId: isClient ? user.clientProfile!.id : null,
+      venueName: venueName?.trim() || null,
+      venueAddress: venueAddress?.trim() || null,
+      guestCount: guestCount ? Number(guestCount) : null,
+      totalBudget: totalBudget ? Number(totalBudget) : null,
+      currency: typeof currency === "string" && currency.length === 3 ? currency.toUpperCase() : "MXN",
+    };
+
     const event = await prisma.event.create({
-      data: {
-        title: title.trim(),
-        type: type as ValidType,
-        eventDate: parsedDate,
-        status: "DRAFT",
-        clientId: user.clientProfile.id,
-        venueName: venueName?.trim() || null,
-        venueAddress: venueAddress?.trim() || null,
-        guestCount: guestCount ? Number(guestCount) : null,
-        totalBudget: totalBudget ? Number(totalBudget) : null,
-        currency: typeof currency === "string" && currency.length === 3 ? currency.toUpperCase() : "MXN",
-      },
+      data: isPlanner
+        ? {
+            ...eventData,
+            planners: {
+              create: { plannerId: user.plannerProfile!.id, isLead: true },
+            },
+          }
+        : eventData,
       select: {
         id: true,
         title: true,

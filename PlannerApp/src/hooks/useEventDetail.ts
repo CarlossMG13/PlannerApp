@@ -53,7 +53,7 @@ export type EventDetail = {
   guestCount: number | null;
   totalBudget: string | null;
   currency: string;
-  client: { user: { id: string; name: string; email: string; avatarUrl: string | null } };
+  client: { user: { id: string; name: string; email: string; avatarUrl: string | null } } | null;
   planners: PlannerEntry[];
   vendors: VendorEntry[];
   tasks: TaskEntry[];

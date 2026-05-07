@@ -211,9 +211,9 @@ model Event {
   totalBudget  Decimal?    @db.Decimal(12, 2)
   currency     String      @default("MXN")
 
-  // Cliente dueño del evento
-  clientId     String
-  client       ClientProfile @relation("EventClient", fields: [clientId], references: [id])
+  // Cliente dueño del evento (null cuando un Planner crea el evento directamente)
+  clientId     String?
+  client       ClientProfile? @relation("EventClient", fields: [clientId], references: [id])
 
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
