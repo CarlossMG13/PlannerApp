@@ -1,11 +1,29 @@
 export const colors = {
   primary: "#16a34a",
   primaryHover: "#15803d",
-  background: "#f8fafc",
+  primaryMuted: "#f0fdf4",
+  primaryLight: "#bbf7d0",
+
+  background: "#f1f5f9",
   surface: "#ffffff",
-  textMain: "#111827",
-  textMuted: "#6b7280",
-  border: "#e5e7eb",
+  surfaceAlt: "#f8fafc",
+
+  textMain: "#0f172a",
+  textSub: "#334155",
+  textMuted: "#64748b",
+
+  border: "#e2e8f0",
+  borderLight: "#f1f5f9",
+
+  // Semantic
+  warning: "#f59e0b",
+  danger: "#ef4444",
+  success: "#22c55e",
+  info: "#3b82f6",
+
+  // Role accent
+  plannerAccent: "#7c3aed",
+  vendorAccent: "#ea580c",
 };
 
 export const radius = {

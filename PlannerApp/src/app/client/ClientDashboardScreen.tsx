@@ -17,6 +17,7 @@ import { colors, radius, shadow } from "@/constants/theme";
 import { centered } from "@/utils/responsive";
 import { useEvents, EventSummary, EventStatus } from "@/hooks/useEvents";
 import { ClientStackParamList } from "@/navigation/types";
+import { AssistantHeaderButton } from "@/components/assistant/AssistantHeaderButton";
 
 const firstName = (name: string) => name.split(" ")[0];
 
@@ -77,9 +78,7 @@ export function ClientDashboardScreen() {
             </Text>
             <Text style={styles.subGreeting}>¿Qué evento estás planeando?</Text>
           </View>
-          <View style={styles.avatarBox}>
-            <Ionicons name="person" size={20} color={colors.primary} />
-          </View>
+          <AssistantHeaderButton />
         </MotiView>
 
         {/* Stats row */}

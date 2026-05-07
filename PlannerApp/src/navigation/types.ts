@@ -46,3 +46,8 @@ export type VendorTabParamList = {
   VendorServices: undefined;
   VendorProfile: undefined;
 };
+
+export type VendorStackParamList = {
+  VendorTabs: undefined;
+  EventDetail: { eventId: string };
+};

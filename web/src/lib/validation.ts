@@ -34,7 +34,9 @@ export const createProfileSchema = z.discriminatedUnion("role", [
     role: z.literal("VENDOR"),
     businessName: z.string().min(1).max(200),
     bio: z.string().max(500).optional(),
-    categoryId: z.string().cuid(),
+    vendorBio: z.string().max(500).optional(),  // alias sent by onboarding draft
+    categoryId: z.string().cuid().optional(),   // UUID from DB picker
+    categoryName: z.string().optional(),        // enum value from onboarding draft
   }).merge(fiscalFields),
 ]);
 

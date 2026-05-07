@@ -19,27 +19,11 @@ import { colors, radius } from "@/constants/theme";
 import { centered } from "@/utils/responsive";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppInput } from "@/components/ui/AppInput";
-import { EventTypeCard } from "@/components/ui/EventTypeCard";
 import { GuestRangeCard } from "@/components/ui/GuestRangeCard";
 import { StepProgress } from "@/components/ui/StepProgress";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
-const TOTAL_STEPS = 4;
-
-type EventType = "WEDDING" | "CORPORATE" | "BIRTHDAY" | "SOCIAL" | "OTHER";
-
-const EVENT_TYPES: Array<{
-  type: EventType;
-  icon: "heart" | "briefcase" | "gift" | "people" | "sparkles";
-  title: string;
-  description: string;
-}> = [
-  { type: "WEDDING", icon: "heart", title: "Boda", description: "Ceremonias y recepciones" },
-  { type: "CORPORATE", icon: "briefcase", title: "Corporativo", description: "Conferencias, talleres, convenciones" },
-  { type: "BIRTHDAY", icon: "gift", title: "Cumpleaños", description: "Fiestas y celebraciones" },
-  { type: "SOCIAL", icon: "people", title: "Social", description: "Reuniones y festividades" },
-  { type: "OTHER", icon: "sparkles", title: "Otro", description: "Otro tipo de evento" },
-];
+const TOTAL_STEPS = 3;
 
 const GUEST_RANGES = [
   { label: "1–50", sublabel: "Íntimo", value: 50 },
@@ -131,10 +115,7 @@ export function CreateEventScreen() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Step 1 — Tipo
-  const [eventType, setEventType] = useState<EventType | null>(null);
-
-  // Step 2 — Detalles básicos
+  // Step 1 — Detalles básicos (event type is always WEDDING)
   const [title, setTitle] = useState("");
   const today = new Date();
   const [day, setDay] = useState(today.getDate());
@@ -150,10 +131,9 @@ export function CreateEventScreen() {
   const [totalBudget, setTotalBudget] = useState("");
 
   const canNext = () => {
-    if (step === 1) return eventType !== null;
-    if (step === 2) return title.trim().length >= 2;
-    if (step === 3) return true; // venue/guests are optional
-    if (step === 4) return true;
+    if (step === 1) return title.trim().length >= 2;
+    if (step === 2) return true; // venue/guests are optional
+    if (step === 3) return true;
     return false;
   };
 
@@ -168,7 +148,6 @@ export function CreateEventScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!eventType) return;
     setLoading(true);
     try {
       const token = await getToken();
@@ -182,7 +161,7 @@ export function CreateEventScreen() {
         },
         body: JSON.stringify({
           title: title.trim(),
-          type: eventType,
+          type: "WEDDING",
           eventDate,
           venueName: venueName.trim() || null,
           venueAddress: venueAddress.trim() || null,
@@ -237,8 +216,7 @@ export function CreateEventScreen() {
               animate={{ opacity: 1, translateX: 0 }}
               transition={{ type: "timing", duration: 260 }}
             >
-              {step === 1 && <StepType selected={eventType} onSelect={setEventType} />}
-              {step === 2 && (
+              {step === 1 && (
                 <StepDetails
                   title={title} onTitleChange={setTitle}
                   day={day} month={month} year={year}
@@ -246,14 +224,14 @@ export function CreateEventScreen() {
                   formattedDate={formattedDate}
                 />
               )}
-              {step === 3 && (
+              {step === 2 && (
                 <StepVenue
                   venueName={venueName} onVenueNameChange={setVenueName}
                   venueAddress={venueAddress} onVenueAddressChange={setVenueAddress}
                   guestCount={guestCount} onGuestCountChange={setGuestCount}
                 />
               )}
-              {step === 4 && (
+              {step === 3 && (
                 <StepBudget budget={totalBudget} onBudgetChange={setTotalBudget} />
               )}
             </MotiView>

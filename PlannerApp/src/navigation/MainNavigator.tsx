@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "@clerk/clerk-expo";
@@ -24,10 +24,12 @@ import {
   PlannerStackParamList,
   PlannerTabParamList,
   VendorTabParamList,
+  VendorStackParamList,
 } from "./types";
 
 const ClientStack = createNativeStackNavigator<ClientStackParamList>();
 const PlannerStack = createNativeStackNavigator<PlannerStackParamList>();
+const VendorStack = createNativeStackNavigator<VendorStackParamList>();
 const ClientTab = createBottomTabNavigator<ClientTabParamList>();
 const PlannerTab = createBottomTabNavigator<PlannerTabParamList>();
 const VendorTab = createBottomTabNavigator<VendorTabParamList>();
@@ -121,6 +123,15 @@ function PlannerTabs() {
   );
 }
 
+function VendorNavigator() {
+  return (
+    <VendorStack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+      <VendorStack.Screen name="VendorTabs" component={VendorTabs} />
+      <VendorStack.Screen name="EventDetail" component={EventDetailScreen} />
+    </VendorStack.Navigator>
+  );
+}
+
 function VendorTabs() {
   return (
     <VendorTab.Navigator
@@ -149,13 +160,13 @@ function VendorTabs() {
 
 export function MainNavigator() {
   const { getToken } = useAuth();
-  const { user, loading, fetchUser } = useUserStore();
+  const { user, loading, error, fetchUser } = useUserStore();
 
   useEffect(() => {
     fetchUser(getToken);
   }, []);
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -163,8 +174,20 @@ export function MainNavigator() {
     );
   }
 
+  if (!user) {
+    return (
+      <View style={styles.loading}>
+        <Ionicons name="cloud-offline-outline" size={48} color={colors.textMuted} />
+        <Text style={styles.errorText}>{error ?? "No se pudo cargar el perfil"}</Text>
+        <TouchableOpacity style={styles.retryBtn} onPress={() => fetchUser(getToken)}>
+          <Text style={styles.retryText}>Reintentar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (user.role === "PLANNER") return <PlannerNavigator />;
-  if (user.role === "VENDOR") return <VendorTabs />;
+  if (user.role === "VENDOR") return <VendorNavigator />;
   return <ClientNavigator />;
 }
 
@@ -174,5 +197,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
+    gap: 16,
+    paddingHorizontal: 32,
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: "center",
+  },
+  retryBtn: {
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#fff",
   },
 });

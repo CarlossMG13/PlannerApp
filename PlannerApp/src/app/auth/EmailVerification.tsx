@@ -113,9 +113,9 @@ export function EmailVerification({ navigation }: Props) {
 
         const { role, profile } = draft;
         if (role) {
-          try {
+          const saveProfile = async () => {
             const token = await getToken();
-            await fetch(`${API_URL}/api/users/me/profile`, {
+            const res = await fetch(`${API_URL}/api/users/me/profile`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -123,8 +123,17 @@ export function EmailVerification({ navigation }: Props) {
               },
               body: JSON.stringify({ role, ...profile }),
             });
+            return res.ok;
+          };
+          try {
+            const ok = await saveProfile();
+            if (!ok) {
+              // Retry once after a short delay to handle webhook race condition
+              await new Promise((r) => setTimeout(r, 1500));
+              await saveProfile();
+            }
           } catch {
-            // Profile save failure is non-blocking — user can complete profile later
+            // Non-blocking — user is signed in, profile will be incomplete
           }
         }
 

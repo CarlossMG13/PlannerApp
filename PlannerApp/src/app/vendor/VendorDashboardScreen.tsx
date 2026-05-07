@@ -10,10 +10,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useUserStore } from "@/store/userStore";
 import { colors, radius, shadow } from "@/constants/theme";
 import { centered } from "@/utils/responsive";
 import { useEvents, EventSummary } from "@/hooks/useEvents";
+import { VendorStackParamList } from "@/navigation/types";
+import { AssistantHeaderButton } from "@/components/assistant/AssistantHeaderButton";
+
+type VendorNav = NativeStackNavigationProp<VendorStackParamList>;
 
 const firstName = (name: string) => name.split(" ")[0];
 
@@ -26,6 +32,7 @@ function formatDate(dateStr: string) {
 }
 
 export function VendorDashboardScreen() {
+  const navigation = useNavigation<VendorNav>();
   const { user } = useUserStore();
   const { events, loading: eventsLoading, error: eventsError, refetch } = useEvents();
 
@@ -57,9 +64,7 @@ export function VendorDashboardScreen() {
             </Text>
             <Text style={styles.subGreeting}>Panel de proveedor</Text>
           </View>
-          <View style={styles.avatarBox}>
-            <Ionicons name="storefront" size={20} color={colors.primary} />
-          </View>
+          <AssistantHeaderButton />
         </MotiView>
 
         {/* Stats row */}
@@ -127,7 +132,12 @@ export function VendorDashboardScreen() {
             <ErrorRow message={eventsError} onRetry={refetch} />
           ) : events.length > 0 ? (
             events.map((ev, i) => (
-              <EventRow key={ev.id} event={ev} isLast={i === events.length - 1} />
+              <EventRow
+                key={ev.id}
+                event={ev}
+                isLast={i === events.length - 1}
+                onPress={() => navigation.navigate("EventDetail", { eventId: ev.id })}
+              />
             ))
           ) : (
             <View style={styles.emptyState}>
@@ -181,7 +191,12 @@ export function VendorDashboardScreen() {
             events
               .filter((e) => e.vendors?.[0]?.status === "PENDING")
               .map((ev, i, arr) => (
-                <EventRow key={ev.id} event={ev} isLast={i === arr.length - 1} />
+                <EventRow
+                  key={ev.id}
+                  event={ev}
+                  isLast={i === arr.length - 1}
+                  onPress={() => navigation.navigate("EventDetail", { eventId: ev.id })}
+                />
               ))
           ) : (
             <View style={styles.emptyState}>
@@ -239,7 +254,7 @@ function StatCard({ icon, label, value }: { icon: any; label: string; value: str
   );
 }
 
-function EventRow({ event, isLast }: { event: EventSummary; isLast?: boolean }) {
+function EventRow({ event, isLast, onPress }: { event: EventSummary; isLast?: boolean; onPress?: () => void }) {
   const vendorStatus = event.vendors?.[0]?.status;
   const statusColor =
     vendorStatus === "CONFIRMED" ? colors.primary
@@ -254,6 +269,7 @@ function EventRow({ event, isLast }: { event: EventSummary; isLast?: boolean }) 
     <TouchableOpacity
       style={[styles.eventRow, isLast && styles.eventRowLast]}
       activeOpacity={0.7}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Ver evento ${event.title}`}
     >

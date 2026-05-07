@@ -16,7 +16,9 @@ import { useUserStore } from "@/store/userStore";
 import { colors, radius, shadow } from "@/constants/theme";
 import { centered } from "@/utils/responsive";
 import { useEvents, EventSummary, EventStatus } from "@/hooks/useEvents";
+import { useUpcomingTasks, UpcomingTask } from "@/hooks/useUpcomingTasks";
 import { PlannerStackParamList } from "@/navigation/types";
+import { AssistantHeaderButton } from "@/components/assistant/AssistantHeaderButton";
 
 const firstName = (name: string) => name.split(" ")[0];
 
@@ -50,15 +52,14 @@ export function PlannerDashboardScreen() {
   const navigation = useNavigation<Nav>();
   const { user } = useUserStore();
   const { events, loading: eventsLoading, error: eventsError, refetch } = useEvents();
+  const { tasks: upcomingTasks, loading: tasksLoading } = useUpcomingTasks();
 
   const activeEvents = events.filter((e) => e.status === "ACTIVE").length;
   const inProgressEvents = events.filter((e) => e.status === "IN_PROGRESS").length;
   const completedEvents = events.filter((e) => e.status === "COMPLETED").length;
 
-  const pendingTasksTotal = events.reduce(
-    (sum, e) => sum + (e._count?.tasks ?? 0),
-    0
-  );
+  const inProgressTasks = upcomingTasks.filter((t) => t.status === "IN_PROGRESS");
+  const todoTasks = upcomingTasks.filter((t) => t.status === "TODO");
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -80,15 +81,18 @@ export function PlannerDashboardScreen() {
             </Text>
             <Text style={styles.subGreeting}>Panel de planificación</Text>
           </View>
-          <TouchableOpacity
-            style={styles.newEventBtn}
-            onPress={() => navigation.navigate("CreateEvent")}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Crear nuevo evento"
-          >
-            <Ionicons name="add" size={20} color="#fff" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <AssistantHeaderButton />
+            <TouchableOpacity
+              style={styles.newEventBtn}
+              onPress={() => navigation.navigate("CreateEvent")}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Crear nuevo evento"
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </MotiView>
 
         {/* Stats row */}
@@ -168,26 +172,69 @@ export function PlannerDashboardScreen() {
         >
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Tareas próximas</Text>
-            {pendingTasksTotal > 0 ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{pendingTasksTotal}</Text>
-              </View>
-            ) : (
-              <View style={styles.badgeEmpty}>
-                <Text style={styles.badgeEmptyText}>0</Text>
-              </View>
+            {upcomingTasks.length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  const firstEvent = upcomingTasks[0]?.event;
+                  if (firstEvent) navigation.navigate("EventDetail", { eventId: firstEvent.id });
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.verTodasLink}>Ver todas</Text>
+              </TouchableOpacity>
             )}
           </View>
 
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconBox}>
-              <Ionicons name="checkmark-circle" size={36} color={colors.primary} />
+          {tasksLoading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color={colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>Sin tareas pendientes</Text>
-            <Text style={styles.emptySubtitle}>
-              Las tareas de tus eventos activos aparecerán aquí.
-            </Text>
-          </View>
+          ) : upcomingTasks.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconBox}>
+                <Ionicons name="checkmark-circle" size={36} color={colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>Sin tareas pendientes</Text>
+              <Text style={styles.emptySubtitle}>
+                Las tareas de tus eventos activos aparecerán aquí.
+              </Text>
+            </View>
+          ) : (
+            <>
+              {inProgressTasks.length > 0 && (
+                <>
+                  <View style={styles.taskGroupHeader}>
+                    <View style={[styles.taskGroupDot, { backgroundColor: "#d97706" }]} />
+                    <Text style={[styles.taskGroupLabel, { color: "#d97706" }]}>En progreso</Text>
+                  </View>
+                  {inProgressTasks.map((task, i) => (
+                    <UpcomingTaskRow
+                      key={task.id}
+                      task={task}
+                      isLast={i === inProgressTasks.length - 1 && todoTasks.length === 0}
+                      onPress={() => navigation.navigate("EventDetail", { eventId: task.event.id })}
+                    />
+                  ))}
+                </>
+              )}
+              {todoTasks.length > 0 && (
+                <>
+                  <View style={[styles.taskGroupHeader, inProgressTasks.length > 0 && styles.taskGroupSeparator]}>
+                    <View style={[styles.taskGroupDot, { backgroundColor: "#64748b" }]} />
+                    <Text style={[styles.taskGroupLabel, { color: "#64748b" }]}>Por hacer</Text>
+                  </View>
+                  {todoTasks.map((task, i) => (
+                    <UpcomingTaskRow
+                      key={task.id}
+                      task={task}
+                      isLast={i === todoTasks.length - 1}
+                      onPress={() => navigation.navigate("EventDetail", { eventId: task.event.id })}
+                    />
+                  ))}
+                </>
+              )}
+            </>
+          )}
         </MotiView>
 
         {/* Acciones rápidas */}
@@ -254,6 +301,43 @@ function EventRow({ event, isLast, onPress }: { event: EventSummary; isLast?: bo
       <Text style={[styles.eventStatusText, { color: statusColor }]}>
         {STATUS_LABEL[event.status]}
       </Text>
+    </TouchableOpacity>
+  );
+}
+
+const PRIORITY_COLOR = { LOW: "#22c55e", MEDIUM: "#f59e0b", HIGH: "#ef4444" } as const;
+
+function UpcomingTaskRow({
+  task,
+  isLast,
+  onPress,
+}: {
+  task: UpcomingTask;
+  isLast: boolean;
+  onPress: () => void;
+}) {
+  const priorityColor = PRIORITY_COLOR[task.priority];
+  const overdue =
+    task.dueDate !== null && new Date(task.dueDate) < new Date();
+
+  return (
+    <TouchableOpacity
+      style={[styles.taskRow, isLast && styles.taskRowLast]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+    >
+      <View style={[styles.taskPriorityBar, { backgroundColor: priorityColor }]} />
+      <View style={styles.taskInfo}>
+        <Text style={styles.taskTitle} numberOfLines={1}>{task.title}</Text>
+        <Text style={styles.taskEventName} numberOfLines={1}>{task.event.title}</Text>
+      </View>
+      {task.dueDate ? (
+        <Text style={[styles.taskDue, overdue && styles.taskDueOverdue]}>
+          {new Date(task.dueDate).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+        </Text>
+      ) : null}
+      <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
     </TouchableOpacity>
   );
 }
@@ -385,6 +469,35 @@ const styles = StyleSheet.create({
   eventTitle: { fontSize: 14, fontWeight: "600", color: colors.textMain },
   eventDate: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   eventStatusText: { fontSize: 11, fontWeight: "700" },
+
+  verTodasLink: { fontSize: 13, fontWeight: "700", color: colors.primary },
+
+  taskGroupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  taskGroupSeparator: { marginTop: 14 },
+  taskGroupDot: { width: 8, height: 8, borderRadius: 4 },
+  taskGroupLabel: { fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+
+  taskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  taskRowLast: { borderBottomWidth: 0 },
+  taskPriorityBar: { width: 3, height: 36, borderRadius: 2 },
+  taskInfo: { flex: 1 },
+  taskTitle: { fontSize: 13, fontWeight: "600", color: colors.textMain },
+  taskEventName: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  taskDue: { fontSize: 11, color: colors.textMuted, fontWeight: "600" },
+  taskDueOverdue: { color: "#ef4444" },
 
   actionsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   actionBtn: {

@@ -138,20 +138,22 @@ export function ProfileScreen() {
       >
         {/* Avatar + name */}
         <MotiView
-          from={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring", damping: 18, stiffness: 140 }}
+          from={{ opacity: 0, translateY: -8 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 380 }}
           style={styles.heroCard}
         >
-          <View style={[styles.avatar, { borderColor: roleColor }]}>
-            <Text style={[styles.avatarText, { color: roleColor }]}>
-              {initials(user.name)}
-            </Text>
+          <View style={[styles.avatarRing, { borderColor: roleColor + "40" }]}>
+            <View style={[styles.avatar, { backgroundColor: roleColor + "14" }]}>
+              <Text style={[styles.avatarText, { color: roleColor }]}>
+                {initials(user.name)}
+              </Text>
+            </View>
           </View>
           <Text style={styles.heroName}>{user.name}</Text>
           <Text style={styles.heroEmail}>{user.email}</Text>
-          <View style={[styles.roleBadge, { backgroundColor: roleColor + "18" }]}>
-            <Text style={[styles.roleText, { color: roleColor }]}>
+          <View style={[styles.roleBadge, { backgroundColor: roleColor, shadowColor: roleColor }]}>
+            <Text style={styles.roleText}>
               {ROLE_LABEL[user.role]}
             </Text>
           </View>
@@ -186,17 +188,19 @@ export function ProfileScreen() {
         {user.role === "PLANNER" && pp && (
           <AccordionSection icon="briefcase-outline" title="Perfil profesional" delay={160}>
             <InfoRow label="Tipo" value={pp.identityType === "COMPANY" ? "Empresa" : "Independiente"} />
-            <InfoRow label="Especialidades" value={Array.isArray(pp.specialties) ? pp.specialties.join(", ") : pp.specialties} />
-            <InfoRow label="Años de experiencia" value={pp.yearsOfExperience != null ? String(pp.yearsOfExperience) : undefined} />
-            <InfoRow label="Bio" value={pp.bio} isLast />
+            <InfoRow label="Negocio" value={pp.businessName as string} />
+            <InfoRow label="Especialidades" value={Array.isArray(pp.specialties) ? (pp.specialties as string[]).join(", ") : pp.specialties as string} />
+            <InfoRow label="Experiencia" value={pp.experience != null ? `${pp.experience} años` : undefined} />
+            <InfoRow label="Bio" value={pp.bio as string} isLast />
           </AccordionSection>
         )}
 
         {/* VENDOR — perfil de proveedor */}
         {user.role === "VENDOR" && vp && (
           <AccordionSection icon="storefront-outline" title="Perfil de proveedor" delay={160}>
-            <InfoRow label="Categoría" value={vp.category} />
-            <InfoRow label="Descripción" value={vp.description} isLast />
+            <InfoRow label="Negocio" value={vp.businessName as string} />
+            <InfoRow label="Categoría" value={(vp.category as any)?.name ?? null} />
+            <InfoRow label="Bio" value={vp.bio as string} isLast />
           </AccordionSection>
         )}
 
@@ -238,44 +242,60 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 16, gap: 12 },
+  content: { paddingHorizontal: 16, paddingBottom: 48, paddingTop: 16, gap: 10 },
 
   // Hero
   heroCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
-    padding: 24,
+    paddingTop: 28,
+    paddingBottom: 22,
+    paddingHorizontal: 24,
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     marginBottom: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...shadow.soft,
+  },
+  avatarRing: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
   },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    borderWidth: 2.5,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8fafc",
-    marginBottom: 4,
   },
   avatarText: { fontSize: 26, fontWeight: "800" },
-  heroName: { fontSize: 20, fontWeight: "800", color: colors.textMain },
-  heroEmail: { fontSize: 13, color: colors.textMuted },
+  heroName: { fontSize: 19, fontWeight: "800", color: colors.textMain, letterSpacing: -0.3 },
+  heroEmail: { fontSize: 13, color: colors.textMuted, marginTop: 1 },
   roleBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
     borderRadius: 99,
-    marginTop: 4,
+    marginTop: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  roleText: { fontSize: 12, fontWeight: "700" },
+  roleText: { fontSize: 11, fontWeight: "800", color: "#fff", letterSpacing: 0.5 },
 
   // Accordion
   accordion: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
     ...shadow.soft,
   },
   accordionHeader: {
@@ -288,8 +308,8 @@ const styles = StyleSheet.create({
   accordionIconBox: {
     width: 34,
     height: 34,
-    borderRadius: 17,
-    backgroundColor: "#f0fdf4",
+    borderRadius: 10,
+    backgroundColor: colors.primaryMuted,
     alignItems: "center",
     justifyContent: "center",
   },

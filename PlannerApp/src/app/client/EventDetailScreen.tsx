@@ -20,7 +20,9 @@ import {
   EventDetail,
   PlannerEntry,
 } from "@/hooks/useEventDetail";
+import { useUserStore } from "@/store/userStore";
 import { AssignPlannerModal } from "./AssignPlannerModal";
+import { AssistantHeaderButton } from "@/components/assistant/AssistantHeaderButton";
 import { TaskListScreen } from "./TaskListScreen";
 import { BudgetScreen } from "./BudgetScreen";
 import { VendorListScreen } from "./VendorListScreen";
@@ -85,6 +87,9 @@ export function EventDetailScreen() {
   const route = useRoute<RouteT>();
   const { eventId } = route.params;
   const { event, loading, error, refetch } = useEventDetail(eventId);
+  const { user } = useUserStore();
+  const role = user?.role ?? "CLIENT";
+  const isVendor = role === "VENDOR";
   const [activeTab, setActiveTab] = useState<Tab>("resumen");
   const [showPlannerModal, setShowPlannerModal] = useState(false);
 
@@ -155,12 +160,12 @@ export function EventDetailScreen() {
             </Text>
           </View>
         </View>
-        <View style={styles.headerRight} />
+        <AssistantHeaderButton eventId={eventId} />
       </MotiView>
 
       {/* Tab bar */}
       <View style={styles.tabBar}>
-        {TABS.map((tab) => (
+        {TABS.filter((t) => !isVendor || t.key === "resumen").map((tab) => (
           <TouchableOpacity
             key={tab.key}
             style={[styles.tabItem, activeTab === tab.key && styles.tabItemActive]}
@@ -189,17 +194,18 @@ export function EventDetailScreen() {
           {activeTab === "resumen" && (
             <ResumeTab
               event={event}
+              role={role}
               onAssignPlanner={() => setShowPlannerModal(true)}
               onPlannerRemoved={refetch}
             />
           )}
-          {activeTab === "tareas" && (
-            <TaskListScreen eventId={event.id} />
+          {activeTab === "tareas" && !isVendor && (
+            <TaskListScreen eventId={event.id} canEdit={role === "PLANNER" || (role === "CLIENT" && event.planners.length === 0)} />
           )}
-          {activeTab === "presupuesto" && (
+          {activeTab === "presupuesto" && !isVendor && (
             <BudgetScreen eventId={event.id} />
           )}
-          {activeTab === "proveedores" && (
+          {activeTab === "proveedores" && !isVendor && (
             <VendorListScreen eventId={event.id} />
           )}
         </View>
@@ -222,13 +228,17 @@ export function EventDetailScreen() {
 
 function ResumeTab({
   event,
+  role,
   onAssignPlanner,
   onPlannerRemoved,
 }: {
   event: EventDetail;
+  role: string;
   onAssignPlanner: () => void;
   onPlannerRemoved: () => void;
 }) {
+  const isPlanner = role === "PLANNER";
+
   return (
     <>
       {/* Event info */}
@@ -278,46 +288,71 @@ function ResumeTab({
         ) : null}
       </MotiView>
 
-      {/* Planner */}
-      <MotiView
-        from={{ opacity: 0, translateY: 12 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", duration: 350, delay: 80 }}
-        style={styles.card}
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Planner asignado</Text>
-          <TouchableOpacity
-            style={styles.assignBtn}
-            onPress={onAssignPlanner}
-            accessibilityRole="button"
-            accessibilityLabel="Asignar planner"
-          >
-            <Ionicons name="add" size={16} color={colors.primary} />
-            <Text style={styles.assignBtnText}>Asignar</Text>
-          </TouchableOpacity>
-        </View>
-
-        {event.planners.length === 0 ? (
-          <View style={styles.emptyPlanner}>
-            <Ionicons name="person-add-outline" size={32} color={colors.textMuted} />
-            <Text style={styles.emptyPlannerText}>Sin planner asignado</Text>
-            <Text style={styles.emptyPlannerSub}>
-              Asigna un planner para coordinar tu evento
-            </Text>
+      {/* Planner section (Client) OR Client section (Planner) */}
+      {isPlanner ? (
+        <MotiView
+          from={{ opacity: 0, translateY: 12 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 350, delay: 80 }}
+          style={styles.card}
+        >
+          <Text style={styles.cardTitle}>Cliente</Text>
+          <View style={styles.plannerRow}>
+            <View style={styles.plannerAvatar}>
+              <Ionicons name="person" size={18} color="#7c3aed" />
+            </View>
+            <View style={styles.plannerInfo}>
+              <Text style={styles.plannerName}>{event.client.user.name}</Text>
+              <Text style={[styles.plannerName, { fontSize: 12, fontWeight: "400", color: colors.textMuted, marginTop: 2 }]}>
+                {event.client.user.email}
+              </Text>
+            </View>
           </View>
-        ) : (
-          event.planners.map((ep, i) => (
-            <PlannerRow
-              key={ep.id}
-              entry={ep}
-              isLast={i === event.planners.length - 1}
-              eventId={event.id}
-              onRemoved={onPlannerRemoved}
-            />
-          ))
-        )}
-      </MotiView>
+        </MotiView>
+      ) : (
+        <MotiView
+          from={{ opacity: 0, translateY: 12 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 350, delay: 80 }}
+          style={styles.card}
+        >
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Planner asignado</Text>
+            {event.planners.length === 0 && (
+              <TouchableOpacity
+                style={styles.assignBtn}
+                onPress={onAssignPlanner}
+                accessibilityRole="button"
+                accessibilityLabel="Asignar planner"
+              >
+                <Ionicons name="add" size={16} color={colors.primary} />
+                <Text style={styles.assignBtnText}>Asignar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {event.planners.length === 0 ? (
+            <View style={styles.emptyPlanner}>
+              <Ionicons name="person-add-outline" size={32} color={colors.textMuted} />
+              <Text style={styles.emptyPlannerText}>Sin planner asignado</Text>
+              <Text style={styles.emptyPlannerSub}>
+                Asigna un planner para coordinar tu evento
+              </Text>
+            </View>
+          ) : (
+            event.planners.map((ep, i) => (
+              <PlannerRow
+                key={ep.id}
+                entry={ep}
+                isLast={i === event.planners.length - 1}
+                eventId={event.id}
+                canRemove={false}
+                onRemoved={onPlannerRemoved}
+              />
+            ))
+          )}
+        </MotiView>
+      )}
 
       {/* Quick stats */}
       <MotiView
@@ -383,11 +418,13 @@ function PlannerRow({
   entry,
   isLast,
   eventId,
+  canRemove = false,
   onRemoved,
 }: {
   entry: PlannerEntry;
   isLast: boolean;
   eventId: string;
+  canRemove?: boolean;
   onRemoved: () => void;
 }) {
   const { getToken } = useAuth();
@@ -420,19 +457,21 @@ function PlannerRow({
           </View>
         )}
       </View>
-      <TouchableOpacity
-        style={styles.removeBtn}
-        onPress={handleRemove}
-        disabled={removing}
-        accessibilityRole="button"
-        accessibilityLabel="Quitar planner"
-      >
-        {removing ? (
-          <ActivityIndicator size="small" color="#ef4444" />
-        ) : (
-          <Ionicons name="close-circle-outline" size={22} color="#ef4444" />
-        )}
-      </TouchableOpacity>
+      {canRemove && (
+        <TouchableOpacity
+          style={styles.removeBtn}
+          onPress={handleRemove}
+          disabled={removing}
+          accessibilityRole="button"
+          accessibilityLabel="Quitar planner"
+        >
+          {removing ? (
+            <ActivityIndicator size="small" color="#ef4444" />
+          ) : (
+            <Ionicons name="close-circle-outline" size={22} color="#ef4444" />
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

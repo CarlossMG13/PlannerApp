@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -63,6 +63,9 @@ export type EventDetail = {
 
 export function useEventDetail(eventId: string) {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,19 +74,19 @@ export function useEventDetail(eventId: string) {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const res = await fetch(`${API_URL}/api/events/${eventId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Error al cargar el evento");
       const data = await res.json();
+      if (!res.ok) throw new Error(`[${res.status}] ${data?.error ?? "Error al cargar el evento"}`);
       setEvent(data.event ?? null);
     } catch (e) {
       setError((e as Error).message ?? "Error desconocido");
     } finally {
       setLoading(false);
     }
-  }, [eventId, getToken]);
+  }, [eventId]);
 
   useEffect(() => {
     load();

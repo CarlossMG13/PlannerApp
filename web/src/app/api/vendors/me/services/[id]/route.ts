@@ -2,9 +2,11 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { ok, unauthorized, forbidden, notFound, badRequest, serverError } from "@/lib/responses";
 
-async function getOwnedService(userId: string, serviceId: string) {
+async function getOwnedService(clerkId: string, serviceId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkId }, select: { id: true } });
+  if (!user) return null;
   const vendor = await prisma.vendorProfile.findUnique({
-    where: { userId },
+    where: { userId: user.id },
     select: { id: true },
   });
   if (!vendor) return null;
