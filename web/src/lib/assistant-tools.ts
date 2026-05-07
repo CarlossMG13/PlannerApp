@@ -1,5 +1,33 @@
 import { prisma } from "@/lib/prisma";
 
+// ─── Card types (shared with mobile via API response) ────────────────────────
+
+export type ProfileCard =
+  | {
+      type: "planner";
+      name: string;
+      matchScore: string;
+      experience: string;
+      rating: number | string;
+      specialties: string[];
+      cities: string[];
+      bio?: string;
+    }
+  | {
+      type: "vendor";
+      businessName: string;
+      category: string;
+      matchScore: string;
+      rating: number | string;
+      estimatedPrice: string;
+      bio?: string;
+    };
+
+export type ToolResult = {
+  display: string;
+  cards?: ProfileCard[];
+};
+
 // ─── Tool Definitions for Claude ────────────────────────────────────────────
 
 export const TOOL_DEFINITIONS = [
@@ -92,7 +120,7 @@ function scorePlanner(budget: number, guestCount: number, experience: number, bu
   return Math.round((budgetFit * 0.5 + expScore * 0.5) * 100);
 }
 
-export async function executeTool(name: string, input: Record<string, unknown>): Promise<string> {
+export async function executeTool(name: string, input: Record<string, unknown>): Promise<ToolResult> {
   const truncate = (obj: unknown) => {
     const str = JSON.stringify(obj);
     return str.length > 2400 ? str.slice(0, 2400) + "…" : str;
@@ -144,7 +172,20 @@ export async function executeTool(name: string, input: Record<string, unknown>):
           bio: vendor.bio?.slice(0, 100),
         }));
 
-      return truncate({ found: results.length, vendors: results, criteria: { capacity, budget, theme } });
+      const cards: ProfileCard[] = results.map((r) => ({
+        type: "vendor" as const,
+        businessName: r.businessName ?? "Sin nombre",
+        category: r.category,
+        matchScore: r.matchScore,
+        rating: r.rating,
+        estimatedPrice: r.estimatedPrice,
+        bio: r.bio,
+      }));
+
+      return {
+        display: truncate({ found: results.length, vendors: results, criteria: { capacity, budget, theme } }),
+        cards,
+      };
     }
 
     if (name === "searchPlanners") {
@@ -202,7 +243,21 @@ export async function executeTool(name: string, input: Record<string, unknown>):
           bio: planner.bio?.slice(0, 100),
         }));
 
-      return truncate({ found: results.length, planners: results, criteria: { eventType, guestCount, budget } });
+      const cards: ProfileCard[] = results.map((r) => ({
+        type: "planner" as const,
+        name: r.name,
+        matchScore: r.matchScore,
+        experience: r.experience,
+        rating: r.rating,
+        specialties: r.specialties,
+        cities: r.cities,
+        bio: r.bio,
+      }));
+
+      return {
+        display: truncate({ found: results.length, planners: results, criteria: { eventType, guestCount, budget } }),
+        cards,
+      };
     }
 
     if (name === "getVendorHistory") {
@@ -219,19 +274,21 @@ export async function executeTool(name: string, input: Record<string, unknown>):
           },
         },
       });
-      if (!vendor) return JSON.stringify({ error: "Proveedor no encontrado" });
+      if (!vendor) return { display: JSON.stringify({ error: "Proveedor no encontrado" }) };
 
       const confirmed = vendor.events.filter((e) => e.status === "CONFIRMED").length;
       const pending = vendor.events.filter((e) => e.status === "PENDING").length;
 
-      return truncate({
-        businessName: vendor.businessName,
-        totalEvents: vendor._count.events,
-        confirmedEvents: confirmed,
-        pendingEvents: pending,
-        totalServices: vendor._count.services,
-        currentRating: vendor.rating ?? "Sin calificaciones aún",
-      });
+      return {
+        display: truncate({
+          businessName: vendor.businessName,
+          totalEvents: vendor._count.events,
+          confirmedEvents: confirmed,
+          pendingEvents: pending,
+          totalServices: vendor._count.services,
+          currentRating: vendor.rating ?? "Sin calificaciones aún",
+        }),
+      };
     }
 
     if (name === "projectRating") {
@@ -249,10 +306,12 @@ export async function executeTool(name: string, input: Record<string, unknown>):
         return r >= 4.5 && p.eventsPerWeek > best.eventsPerWeek ? p : best;
       }, projections[0]);
 
-      return truncate({
-        projections,
-        recommendation: `Carga óptima: ${sweet?.eventsPerWeek} eventos/semana (${sweet?.projectedRating})`,
-      });
+      return {
+        display: truncate({
+          projections,
+          recommendation: `Carga óptima: ${sweet?.eventsPerWeek} eventos/semana (${sweet?.projectedRating})`,
+        }),
+      };
     }
 
     if (name === "getEventContext") {
@@ -290,37 +349,41 @@ export async function executeTool(name: string, input: Record<string, unknown>):
         },
       });
 
-      if (!user) return JSON.stringify({ error: "Usuario no encontrado" });
+      if (!user) return { display: JSON.stringify({ error: "Usuario no encontrado" }) };
 
       const event = user.clientProfile?.events[0];
-      if (!event && user.role !== "VENDOR") return JSON.stringify({ message: "Sin eventos activos" });
+      if (!event && user.role !== "VENDOR") return { display: JSON.stringify({ message: "Sin eventos activos" }) };
 
       if (user.role === "VENDOR" && user.vendorProfile) {
-        return truncate({
-          role: "VENDOR",
-          vendorId: user.vendorProfile.id,
-          businessName: user.vendorProfile.businessName,
-          category: user.vendorProfile.category.name,
-          totalEvents: user.vendorProfile._count.events,
-        });
+        return {
+          display: truncate({
+            role: "VENDOR",
+            vendorId: user.vendorProfile.id,
+            businessName: user.vendorProfile.businessName,
+            category: user.vendorProfile.category.name,
+            totalEvents: user.vendorProfile._count.events,
+          }),
+        };
       }
 
-      return truncate({
-        role: user.role,
-        event: event ? {
-          title: event.title,
-          type: event.type,
-          date: event.eventDate,
-          guestCount: event.guestCount,
-          budget: `${event.totalBudget} ${event.currency}`,
-          status: event.status,
-        } : null,
-      });
+      return {
+        display: truncate({
+          role: user.role,
+          event: event ? {
+            title: event.title,
+            type: event.type,
+            date: event.eventDate,
+            guestCount: event.guestCount,
+            budget: `${event.totalBudget} ${event.currency}`,
+            status: event.status,
+          } : null,
+        }),
+      };
     }
 
-    return JSON.stringify({ error: `Tool desconocido: ${name}` });
+    return { display: JSON.stringify({ error: `Tool desconocido: ${name}` }) };
   } catch (err) {
     console.error(`[tool:${name}]`, (err as Error).message);
-    return JSON.stringify({ error: "Error al ejecutar la consulta" });
+    return { display: JSON.stringify({ error: "Error al ejecutar la consulta" }) };
   }
 }

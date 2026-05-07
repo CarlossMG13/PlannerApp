@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { MotiView } from "moti";
 import { colors, radius, shadow } from "@/constants/theme";
-import { useAssistantChat, ChatMessage } from "@/hooks/useAssistantChat";
+import { useAssistantChat, ChatMessage, ProfileCard } from "@/hooks/useAssistantChat";
 
 type Props = {
   visible: boolean;
@@ -161,6 +161,32 @@ export function AssistantChat({ visible, onClose, eventId }: Props) {
 
 function MessageBubble({ message, isLast }: { message: ChatMessage; isLast: boolean }) {
   const isUser = message.role === "user";
+  const hasCards = !isUser && (message.cards?.length ?? 0) > 0;
+
+  if (hasCards) {
+    return (
+      <MotiView
+        from={{ opacity: 0, translateY: 8 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: "timing", duration: 250 }}
+        style={styles.botMsgWithCards}
+      >
+        <View style={[styles.bubbleWrapper, styles.bubbleLeft]}>
+          <View style={styles.botAvatar}>
+            <Text style={{ fontSize: 14 }}>✨</Text>
+          </View>
+          <View style={[styles.bubble, styles.bubbleBot]}>
+            <Text style={styles.bubbleText}>{message.content}</Text>
+          </View>
+        </View>
+        <View style={styles.cardsArea}>
+          {message.cards!.map((card, i) => (
+            <ProfileCardWidget key={i} card={card} />
+          ))}
+        </View>
+      </MotiView>
+    );
+  }
 
   return (
     <MotiView
@@ -187,6 +213,81 @@ function MessageBubble({ message, isLast }: { message: ChatMessage; isLast: bool
         )}
       </View>
     </MotiView>
+  );
+}
+
+// ─── Profile Card Widget ─────────────────────────────────────────────────────
+
+function ProfileCardWidget({ card }: { card: ProfileCard }) {
+  const score = parseInt(card.matchScore);
+  const scoreColor = score >= 75 ? "#16a34a" : score >= 55 ? "#d97706" : "#ef4444";
+  const name = card.type === "planner" ? card.name : card.businessName;
+
+  return (
+    <View style={[pcStyles.card, { borderLeftColor: scoreColor }]}>
+      {/* Score badge */}
+      <View style={[pcStyles.scoreBadge, { backgroundColor: scoreColor + "18" }]}>
+        <View style={[pcStyles.scoreDot, { backgroundColor: scoreColor }]} />
+        <Text style={[pcStyles.scoreText, { color: scoreColor }]}>
+          {card.matchScore} compatibilidad
+        </Text>
+      </View>
+
+      {/* Name */}
+      <Text style={pcStyles.name}>{name}</Text>
+
+      {/* Tags row */}
+      <View style={pcStyles.tagsRow}>
+        {card.type === "planner" && card.experience !== "N/D" && (
+          <View style={pcStyles.tag}>
+            <Ionicons name="time-outline" size={11} color={colors.textMuted} />
+            <Text style={pcStyles.tagText}>{card.experience}</Text>
+          </View>
+        )}
+        {card.type === "vendor" && (
+          <View style={pcStyles.tag}>
+            <Ionicons name="pricetag-outline" size={11} color={colors.textMuted} />
+            <Text style={pcStyles.tagText}>{card.category}</Text>
+          </View>
+        )}
+        {typeof card.rating === "number" && (
+          <View style={pcStyles.tag}>
+            <Ionicons name="star" size={11} color="#f59e0b" />
+            <Text style={pcStyles.tagText}>{(card.rating as number).toFixed(1)}</Text>
+          </View>
+        )}
+        {card.type === "vendor" && (
+          <View style={pcStyles.tag}>
+            <Ionicons name="cash-outline" size={11} color={colors.textMuted} />
+            <Text style={pcStyles.tagText}>{card.estimatedPrice}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Specialties (planner) */}
+      {card.type === "planner" && card.specialties.length > 0 && (
+        <View style={pcStyles.chips}>
+          {card.specialties.map((s, i) => (
+            <View key={i} style={pcStyles.chip}>
+              <Text style={pcStyles.chipText}>{s}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Location (planner) */}
+      {card.type === "planner" && card.cities.length > 0 && (
+        <View style={pcStyles.locationRow}>
+          <Ionicons name="location-outline" size={11} color={colors.textMuted} />
+          <Text style={pcStyles.locationText}>{card.cities.join(", ")}</Text>
+        </View>
+      )}
+
+      {/* Bio */}
+      {card.bio ? (
+        <Text style={pcStyles.bio} numberOfLines={2}>{card.bio}</Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -359,4 +460,59 @@ const styles = StyleSheet.create({
     ...shadow.soft,
   },
   sendBtnDisabled: { opacity: 0.4 },
+
+  // ── Cards layout ──────────────────────────────────────────────────────────
+  botMsgWithCards: { flexDirection: "column", gap: 8 },
+  cardsArea: { marginLeft: 36, gap: 8 },
+});
+
+// ─── Profile card styles ─────────────────────────────────────────────────────
+
+const pcStyles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderLeftWidth: 3,
+    gap: 7,
+    ...shadow.soft,
+  },
+  scoreBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: radius.sm,
+    gap: 5,
+  },
+  scoreDot: { width: 6, height: 6, borderRadius: 3 },
+  scoreText: { fontSize: 12, fontWeight: "700" },
+  name: { fontSize: 14, fontWeight: "700", color: colors.textMain },
+  tagsRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
+  tag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: colors.background,
+    paddingVertical: 2,
+    paddingHorizontal: 7,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  tagText: { fontSize: 11, color: colors.textMuted, fontWeight: "500" },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
+  chip: {
+    backgroundColor: `${colors.primary}15`,
+    paddingVertical: 2,
+    paddingHorizontal: 7,
+    borderRadius: radius.sm,
+  },
+  chipText: { fontSize: 11, color: colors.primary, fontWeight: "600" },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  locationText: { fontSize: 11, color: colors.textMuted },
+  bio: { fontSize: 12, color: colors.textMuted, lineHeight: 17, fontStyle: "italic" },
 });

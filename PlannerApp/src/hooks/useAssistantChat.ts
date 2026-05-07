@@ -2,11 +2,33 @@ import { useState, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import { useUserStore } from "@/store/userStore";
 
+export type ProfileCard =
+  | {
+      type: "planner";
+      name: string;
+      matchScore: string;
+      experience: string;
+      rating: number | string;
+      specialties: string[];
+      cities: string[];
+      bio?: string;
+    }
+  | {
+      type: "vendor";
+      businessName: string;
+      category: string;
+      matchScore: string;
+      rating: number | string;
+      estimatedPrice: string;
+      bio?: string;
+    };
+
 export type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
   loading?: boolean;
+  cards?: ProfileCard[];
 };
 
 const BASE = process.env.EXPO_PUBLIC_API_URL ?? "";
@@ -64,7 +86,7 @@ export function useAssistantChat(eventId?: string) {
       setMessages((prev) =>
         prev.map((m) =>
           m.id === loadingMsg.id
-            ? { ...m, content: data.message, loading: false }
+            ? { ...m, content: data.message, loading: false, cards: data.cards }
             : m
         )
       );

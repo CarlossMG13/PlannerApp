@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { ok, unauthorized, badRequest, serverError } from "@/lib/responses";
-import { TOOL_DEFINITIONS, executeTool } from "@/lib/assistant-tools";
+import { TOOL_DEFINITIONS, executeTool, ProfileCard } from "@/lib/assistant-tools";
 
 // ─── Rate limiting (in-memory, resets on deploy) ─────────────────────────────
 const rateLimitMap = new Map<string, number[]>();
@@ -49,6 +49,7 @@ Instrucciones:
 - No inventes datos. Si un tool call devuelve lista vacía, dilo claramente y sugiere ampliar los criterios.
 - Nunca expongas IDs internos, SQL ni detalles técnicos de la base de datos.
 - No hagas más de 2 tool calls por turno de conversación.
+- Cuando uses searchPlanners o searchVendors y haya resultados, escribe SOLO: 1 oración de intro (ej. "Encontré 2 planners que se ajustan a tu perfil:") y 1-2 oraciones de cierre o sugerencia. NO listes los campos con bullets — la app los muestra como tarjetas visuales automáticamente.
 - Si la pregunta está fuera del scope de Plania, redirige: "Soy el asistente de Plania — puedo ayudarte a encontrar proveedores o planners para tu evento."`;
 }
 
@@ -100,6 +101,7 @@ export async function POST(req: Request) {
   const startedAt = Date.now();
   let toolsCalledCount = 0;
   let toolsCalled: string[] = [];
+  const collectedCards: ProfileCard[] = [];
 
   try {
     const anthropic = new Anthropic({ apiKey });
@@ -136,7 +138,8 @@ export async function POST(req: Request) {
         toolsCalledCount++;
         toolsCalled.push(block.name);
         const result = await executeTool(block.name, block.input as Record<string, unknown>);
-        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: result });
+        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: result.display });
+        if (result.cards) collectedCards.push(...result.cards);
       }
 
       currentMessages = [
@@ -171,7 +174,10 @@ export async function POST(req: Request) {
       model: "claude-haiku-4-5-20251001",
     }));
 
-    return ok({ message: finalText });
+    return ok({
+      message: finalText,
+      cards: collectedCards.length > 0 ? collectedCards : undefined,
+    });
   } catch (err) {
     console.error("[assistant/chat]", (err as Error).message);
     return serverError();
