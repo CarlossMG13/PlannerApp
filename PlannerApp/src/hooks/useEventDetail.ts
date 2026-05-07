@@ -17,7 +17,7 @@ export type VendorEntry = {
   agreedPrice: string | null;
   notes: string | null;
   vendor: {
-    user: { name: string; avatarUrl: string | null };
+    user: { id: string; name: string; avatarUrl: string | null };
     category: { name: string; icon: string | null };
   };
   service: { name: string; basePrice: string; currency: string } | null;

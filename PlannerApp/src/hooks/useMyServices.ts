@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 
 export type MyService = {
@@ -13,6 +13,9 @@ const BASE = process.env.EXPO_PUBLIC_API_URL;
 
 export function useMyServices() {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   const [services, setServices] = useState<MyService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +24,7 @@ export function useMyServices() {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const res = await fetch(`${BASE}/api/vendors/me/services`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -33,7 +36,7 @@ export function useMyServices() {
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, []);
 
   useEffect(() => { fetchServices(); }, [fetchServices]);
 
@@ -43,7 +46,7 @@ export function useMyServices() {
     basePrice: number;
     currency?: string;
   }) => {
-    const token = await getToken();
+    const token = await getTokenRef.current();
     const res = await fetch(`${BASE}/api/vendors/me/services`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -53,7 +56,7 @@ export function useMyServices() {
     if (!res.ok) throw new Error(data.error ?? "Error al crear servicio");
     setServices((prev) => [...prev, data.service]);
     return data.service as MyService;
-  }, [getToken]);
+  }, []);
 
   const updateService = useCallback(async (id: string, payload: Partial<{
     name: string;
@@ -61,7 +64,7 @@ export function useMyServices() {
     basePrice: number;
     currency: string;
   }>) => {
-    const token = await getToken();
+    const token = await getTokenRef.current();
     const res = await fetch(`${BASE}/api/vendors/me/services/${id}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -71,10 +74,10 @@ export function useMyServices() {
     if (!res.ok) throw new Error(data.error ?? "Error al actualizar servicio");
     setServices((prev) => prev.map((s) => (s.id === id ? data.service : s)));
     return data.service as MyService;
-  }, [getToken]);
+  }, []);
 
   const deleteService = useCallback(async (id: string) => {
-    const token = await getToken();
+    const token = await getTokenRef.current();
     const res = await fetch(`${BASE}/api/vendors/me/services/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
@@ -84,7 +87,7 @@ export function useMyServices() {
       throw new Error(data.error ?? "Error al eliminar servicio");
     }
     setServices((prev) => prev.filter((s) => s.id !== id));
-  }, [getToken]);
+  }, []);
 
   return { services, loading, error, refetch: fetchServices, createService, updateService, deleteService };
 }

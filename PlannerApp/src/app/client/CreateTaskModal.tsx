@@ -16,9 +16,12 @@ import { useAuth } from "@clerk/clerk-expo";
 import { colors, radius } from "@/constants/theme";
 import { TaskPriority } from "@/hooks/useTaskList";
 
+export type AssignableUser = { userId: string; name: string };
+
 type Props = {
   visible: boolean;
   eventId: string;
+  assignableUsers?: AssignableUser[];
   onClose: () => void;
   onCreated: () => void;
 };
@@ -41,12 +44,13 @@ function parseDateMX(str: string): string | undefined {
   return iso;
 }
 
-export function CreateTaskModal({ visible, eventId, onClose, onCreated }: Props) {
+export function CreateTaskModal({ visible, eventId, assignableUsers = [], onClose, onCreated }: Props) {
   const { getToken } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
   const [dueDate, setDueDate] = useState("");
+  const [assignedToId, setAssignedToId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +59,7 @@ export function CreateTaskModal({ visible, eventId, onClose, onCreated }: Props)
     setDescription("");
     setPriority("MEDIUM");
     setDueDate("");
+    setAssignedToId(null);
     setError(null);
   };
 
@@ -96,6 +101,7 @@ export function CreateTaskModal({ visible, eventId, onClose, onCreated }: Props)
             description: description.trim() || undefined,
             priority,
             dueDate: parsedDate,
+            assignedToId: assignedToId ?? undefined,
           }),
         }
       );
@@ -203,6 +209,37 @@ export function CreateTaskModal({ visible, eventId, onClose, onCreated }: Props)
               maxLength={10}
             />
 
+            {assignableUsers.length > 0 && (
+              <>
+                <Text style={styles.label}>Asignar a proveedor</Text>
+                <View style={styles.assigneeRow}>
+                  <TouchableOpacity
+                    style={[styles.assigneeChip, assignedToId === null && styles.assigneeChipActive]}
+                    onPress={() => setAssignedToId(null)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: assignedToId === null }}
+                  >
+                    <Text style={[styles.assigneeChipText, assignedToId === null && styles.assigneeChipTextActive]}>
+                      Sin asignar
+                    </Text>
+                  </TouchableOpacity>
+                  {assignableUsers.map((u) => (
+                    <TouchableOpacity
+                      key={u.userId}
+                      style={[styles.assigneeChip, assignedToId === u.userId && styles.assigneeChipActive]}
+                      onPress={() => setAssignedToId(u.userId)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: assignedToId === u.userId }}
+                    >
+                      <Text style={[styles.assigneeChipText, assignedToId === u.userId && styles.assigneeChipTextActive]}>
+                        {u.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
             {error ? (
               <View style={styles.errorRow}>
                 <Ionicons name="alert-circle-outline" size={16} color="#ef4444" />
@@ -288,6 +325,19 @@ const styles = StyleSheet.create({
     height: 80,
     paddingTop: 12,
   },
+  assigneeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  assigneeChip: {
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  assigneeChipActive: { borderColor: colors.primary, backgroundColor: `${colors.primary}12` },
+  assigneeChipText: { fontSize: 13, fontWeight: "600", color: colors.textMuted },
+  assigneeChipTextActive: { color: colors.primary },
+
   priorityRow: { flexDirection: "row", gap: 10 },
   priorityBtn: {
     flex: 1,

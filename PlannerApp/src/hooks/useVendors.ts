@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 
 export type VendorCategory = { id: string; name: string; icon: string | null };
@@ -39,6 +39,9 @@ export type EventVendorAssignment = {
 
 export function useVendors(categoryId?: string) {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +50,7 @@ export function useVendors(categoryId?: string) {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const url = new URL(`${process.env.EXPO_PUBLIC_API_URL}/api/vendors`);
       if (categoryId) url.searchParams.set("categoryId", categoryId);
       const res = await fetch(url.toString(), {
@@ -64,7 +67,7 @@ export function useVendors(categoryId?: string) {
     } finally {
       setLoading(false);
     }
-  }, [categoryId, getToken]);
+  }, [categoryId]);
 
   useEffect(() => {
     fetchVendors();
@@ -75,6 +78,9 @@ export function useVendors(categoryId?: string) {
 
 export function useEventVendors(eventId: string) {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   const [vendors, setVendors] = useState<EventVendorAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +89,7 @@ export function useEventVendors(eventId: string) {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/events/${eventId}/vendors`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -99,7 +105,7 @@ export function useEventVendors(eventId: string) {
     } finally {
       setLoading(false);
     }
-  }, [eventId, getToken]);
+  }, [eventId]);
 
   useEffect(() => {
     fetchVendors();

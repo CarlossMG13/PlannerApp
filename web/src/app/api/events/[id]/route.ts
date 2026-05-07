@@ -49,7 +49,7 @@ export async function GET(
           include: {
             vendor: {
               include: {
-                user: { select: { name: true, avatarUrl: true } },
+                user: { select: { id: true, name: true, avatarUrl: true } },
                 category: { select: { name: true, icon: true } },
               },
             },

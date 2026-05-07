@@ -10,14 +10,20 @@ async function resolveAccess(clerkId: string, eventId: string) {
     prisma.user.findUnique({
       where: { clerkId },
       select: {
+        id: true,
         role: true,
         clientProfile: { select: { id: true } },
         plannerProfile: { select: { id: true } },
+        vendorProfile: { select: { id: true } },
       },
     }),
     prisma.event.findUnique({
       where: { id: eventId },
-      select: { clientId: true, planners: { select: { plannerId: true } } },
+      select: {
+        clientId: true,
+        planners: { select: { plannerId: true } },
+        vendors: { select: { vendorId: true } },
+      },
     }),
   ]);
 
@@ -27,10 +33,13 @@ async function resolveAccess(clerkId: string, eventId: string) {
   const isPlanner =
     user.plannerProfile != null &&
     event.planners.some((p) => p.plannerId === user.plannerProfile!.id);
+  const isVendor =
+    user.vendorProfile != null &&
+    event.vendors.some((v) => v.vendorId === user.vendorProfile!.id);
   const isAdmin = user.role === "ADMIN";
 
-  if (!isOwner && !isPlanner && !isAdmin) return null;
-  return { user, event };
+  if (!isOwner && !isPlanner && !isVendor && !isAdmin) return null;
+  return { user, event, isVendor };
 }
 
 export async function GET(
@@ -48,7 +57,11 @@ export async function GET(
     if (!access) return forbidden();
 
     const tasks = await prisma.task.findMany({
-      where: { eventId },
+      where: {
+        eventId,
+        // Vendors only see their own assigned tasks
+        ...(access.isVendor ? { assignedToId: access.user.id } : {}),
+      },
       select: {
         id: true,
         title: true,
@@ -79,20 +92,23 @@ export async function POST(
   const { id: eventId } = await params;
   if (!CUID_REGEX.test(eventId)) return badRequest("ID de evento inválido");
 
-  let body: { title?: unknown; description?: unknown; priority?: unknown; dueDate?: unknown };
+  let body: { title?: unknown; description?: unknown; priority?: unknown; dueDate?: unknown; assignedToId?: unknown };
   try {
     body = await req.json();
   } catch {
     return badRequest("Body inválido");
   }
 
-  const { title, description, priority = "MEDIUM", dueDate } = body;
+  const { title, description, priority = "MEDIUM", dueDate, assignedToId } = body;
 
   if (!title || typeof title !== "string" || !title.trim()) {
     return badRequest("El título es requerido");
   }
   if (typeof priority !== "string" || !(VALID_PRIORITIES as readonly string[]).includes(priority)) {
     return badRequest("Prioridad inválida");
+  }
+  if (assignedToId !== undefined && (typeof assignedToId !== "string" || !assignedToId)) {
+    return badRequest("assignedToId inválido");
   }
 
   let parsedDate: Date | undefined;
@@ -116,6 +132,7 @@ export async function POST(
             : null,
         priority: priority as (typeof VALID_PRIORITIES)[number],
         dueDate: parsedDate,
+        assignedToId: typeof assignedToId === "string" ? assignedToId : null,
       },
       select: {
         id: true,

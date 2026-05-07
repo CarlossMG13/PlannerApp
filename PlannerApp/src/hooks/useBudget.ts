@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 
 export type BudgetItemStatus = "ESTIMATED" | "CONFIRMED" | "PAID";
@@ -22,6 +22,9 @@ export type BudgetSummary = {
 
 export function useBudget(eventId: string) {
   const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   const [items, setItems] = useState<BudgetItem[]>([]);
   const [summary, setSummary] = useState<BudgetSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +34,7 @@ export function useBudget(eventId: string) {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/events/${eventId}/budget`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -48,7 +51,7 @@ export function useBudget(eventId: string) {
     } finally {
       setLoading(false);
     }
-  }, [eventId, getToken]);
+  }, [eventId]);
 
   useEffect(() => {
     fetchBudget();

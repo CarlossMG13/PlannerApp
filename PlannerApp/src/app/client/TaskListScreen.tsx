@@ -13,9 +13,9 @@ import { MotiView } from "moti";
 import { useAuth } from "@clerk/clerk-expo";
 import { colors, radius, shadow } from "@/constants/theme";
 import { useTaskList, Task, TaskStatus } from "@/hooks/useTaskList";
-import { CreateTaskModal } from "./CreateTaskModal";
+import { CreateTaskModal, AssignableUser } from "./CreateTaskModal";
 
-type Props = { eventId: string; canEdit?: boolean };
+type Props = { eventId: string; canEdit?: boolean; assignableUsers?: AssignableUser[] };
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const COLUMN_WIDTH = Math.min(240, SCREEN_WIDTH * 0.72);
@@ -42,7 +42,7 @@ const STATUS_NEXT: Record<TaskStatus, TaskStatus> = {
   DONE: "TODO",
 };
 
-export function TaskListScreen({ eventId, canEdit = true }: Props) {
+export function TaskListScreen({ eventId, canEdit = true, assignableUsers = [] }: Props) {
   const { tasks, loading, error, refetch } = useTaskList(eventId);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -173,6 +173,7 @@ export function TaskListScreen({ eventId, canEdit = true }: Props) {
         <CreateTaskModal
           visible={showCreate}
           eventId={eventId}
+          assignableUsers={assignableUsers}
           onClose={() => setShowCreate(false)}
           onCreated={() => { setShowCreate(false); refetch(); }}
         />
@@ -262,6 +263,12 @@ function KanbanCard({
           </View>
         ) : null}
       </View>
+      {task.assignedTo ? (
+        <View style={styles.assigneeRow}>
+          <Ionicons name="person-outline" size={11} color={colors.primary} />
+          <Text style={styles.assigneeText} numberOfLines={1}>{task.assignedTo.name}</Text>
+        </View>
+      ) : null}
 
       {canEdit ? (
         <View style={styles.cardFooter}>
@@ -398,4 +405,7 @@ const styles = StyleSheet.create({
 
   cardFooter: { flexDirection: "row", alignItems: "center", gap: 4, paddingTop: 2, borderTopWidth: 1, borderTopColor: colors.border },
   cardHint: { fontSize: 10, color: colors.textMuted },
+
+  assigneeRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  assigneeText: { fontSize: 11, color: colors.primary, fontWeight: "600", flex: 1 },
 });

@@ -19,7 +19,9 @@ import {
   useEventDetail,
   EventDetail,
   PlannerEntry,
+  VendorEntry,
 } from "@/hooks/useEventDetail";
+import { AssignableUser } from "./CreateTaskModal";
 import { useUserStore } from "@/store/userStore";
 import { AssignPlannerModal } from "./AssignPlannerModal";
 import { AssistantHeaderButton } from "@/components/assistant/AssistantHeaderButton";
@@ -30,6 +32,12 @@ import { ClientStackParamList } from "@/navigation/types";
 
 type Nav = NativeStackNavigationProp<ClientStackParamList>;
 type RouteT = RouteProp<ClientStackParamList, "EventDetail">;
+
+function vendorsToAssignableUsers(vendors: VendorEntry[]): AssignableUser[] {
+  return vendors
+    .filter((v) => v.status === "CONFIRMED" || v.status === "PENDING")
+    .map((v) => ({ userId: v.vendor.user.id, name: v.vendor.user.name }));
+}
 
 const EVENT_TYPE_LABEL: Record<string, string> = {
   WEDDING: "Boda",
@@ -57,11 +65,16 @@ const STATUS_COLOR: Record<string, string> = {
 
 type Tab = "resumen" | "tareas" | "presupuesto" | "proveedores";
 
-const TABS: { key: Tab; label: string }[] = [
+const TABS_FULL: { key: Tab; label: string }[] = [
   { key: "resumen", label: "Resumen" },
   { key: "tareas", label: "Tareas" },
   { key: "presupuesto", label: "Presupuesto" },
   { key: "proveedores", label: "Proveedores" },
+];
+
+const TABS_VENDOR: { key: Tab; label: string }[] = [
+  { key: "resumen", label: "Resumen" },
+  { key: "tareas", label: "Tareas" },
 ];
 
 function formatDate(dateStr: string) {
@@ -165,7 +178,7 @@ export function EventDetailScreen() {
 
       {/* Tab bar */}
       <View style={styles.tabBar}>
-        {TABS.filter((t) => !isVendor || t.key === "resumen").map((tab) => (
+        {(isVendor ? TABS_VENDOR : TABS_FULL).map((tab) => (
           <TouchableOpacity
             key={tab.key}
             style={[styles.tabItem, activeTab === tab.key && styles.tabItemActive]}
@@ -200,7 +213,14 @@ export function EventDetailScreen() {
             />
           )}
           {activeTab === "tareas" && !isVendor && (
-            <TaskListScreen eventId={event.id} canEdit={role === "PLANNER" || (role === "CLIENT" && event.planners.length === 0)} />
+            <TaskListScreen
+              eventId={event.id}
+              canEdit={role === "PLANNER" || (role === "CLIENT" && event.planners.length === 0)}
+              assignableUsers={role === "PLANNER" ? vendorsToAssignableUsers(event.vendors) : []}
+            />
+          )}
+          {activeTab === "tareas" && isVendor && (
+            <TaskListScreen eventId={event.id} canEdit={false} />
           )}
           {activeTab === "presupuesto" && !isVendor && (
             <BudgetScreen eventId={event.id} />
