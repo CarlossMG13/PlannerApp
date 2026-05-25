@@ -35,7 +35,7 @@ function formatMXN(value: string | number) {
 
 export function AssignVendorModal({ visible, eventId, onClose, onAssigned }: Props) {
   const { getToken } = useAuth();
-  const { vendors, loading: loadingVendors } = useVendors();
+  const { vendors, loading: loadingVendors, error: fetchError, refetch } = useVendors();
 
   const [step, setStep] = useState<"select" | "configure">("select");
   const [search, setSearch] = useState("");
@@ -45,6 +45,13 @@ export function AssignVendorModal({ visible, eventId, onClose, onAssigned }: Pro
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (visible) {
+      reset();
+      refetch();
+    }
+  }, [visible, refetch]);
 
   const reset = () => {
     setStep("select");
@@ -162,6 +169,12 @@ export function AssignVendorModal({ visible, eventId, onClose, onAssigned }: Pro
                 value={search}
                 onChangeText={setSearch}
               />
+              {fetchError ? (
+                <View style={[styles.errorRow, { marginBottom: 12 }]}>
+                  <Ionicons name="alert-circle-outline" size={16} color="#ef4444" />
+                  <Text style={styles.errorText}>{fetchError}</Text>
+                </View>
+              ) : null}
               {loadingVendors ? (
                 <View style={styles.center}>
                   <ActivityIndicator size="large" color={colors.primary} />
@@ -285,10 +298,10 @@ export function AssignVendorModal({ visible, eventId, onClose, onAssigned }: Pro
                 textAlignVertical="top"
               />
 
-              {error ? (
+              {error || fetchError ? (
                 <View style={styles.errorRow}>
                   <Ionicons name="alert-circle-outline" size={16} color="#ef4444" />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Text style={styles.errorText}>{error || fetchError}</Text>
                 </View>
               ) : null}
 

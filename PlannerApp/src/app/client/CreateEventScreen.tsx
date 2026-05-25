@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,15 +16,17 @@ import { MotiView } from "moti";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 
-import { colors, radius } from "@/constants/theme";
+import { colors, radius, shadow } from "@/constants/theme";
 import { centered } from "@/utils/responsive";
 import { AppButton } from "@/components/ui/AppButton";
 import { AppInput } from "@/components/ui/AppInput";
 import { GuestRangeCard } from "@/components/ui/GuestRangeCard";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { usePlanners, PlannerOption } from "@/hooks/usePlanners";
+import { useVendors, Vendor } from "@/hooks/useVendors";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 5;
 
 const GUEST_RANGES = [
   { label: "1–50", sublabel: "Íntimo", value: 50 },
@@ -130,10 +133,18 @@ export function CreateEventScreen() {
   // Step 4 — Presupuesto
   const [totalBudget, setTotalBudget] = useState("");
 
+  // Step 4 — Planner (Optional)
+  const [selectedPlannerId, setSelectedPlannerId] = useState<string | null>(null);
+
+  // Step 5 — Vendors (Optional)
+  const [selectedVendorIds, setSelectedVendorIds] = useState<string[]>([]);
+
   const canNext = () => {
     if (step === 1) return title.trim().length >= 2;
-    if (step === 2) return true; // venue/guests are optional
+    if (step === 2) return true;
     if (step === 3) return true;
+    if (step === 4) return true;
+    if (step === 5) return true;
     return false;
   };
 
@@ -171,10 +182,38 @@ export function CreateEventScreen() {
         }),
       });
 
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         Alert.alert("Error", data.error ?? "No se pudo crear el evento");
         return;
+      }
+
+      const eventId = data.event?.id;
+
+      // Assign Planner if selected
+      if (eventId && selectedPlannerId) {
+        await fetch(`${API_URL}/api/events/${eventId}/planners`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ plannerId: selectedPlannerId }),
+        });
+      }
+
+      // Assign Vendors if selected
+      if (eventId && selectedVendorIds.length > 0) {
+        for (const vendorId of selectedVendorIds) {
+          await fetch(`${API_URL}/api/events/${eventId}/vendors`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ vendorId }),
+          });
+        }
       }
 
       navigation.goBack();
@@ -234,9 +273,28 @@ export function CreateEventScreen() {
               {step === 3 && (
                 <StepBudget budget={totalBudget} onBudgetChange={setTotalBudget} />
               )}
+              {step === 4 && (
+                <StepPlanner
+                  selectedId={selectedPlannerId}
+                  onSelect={(id) => setSelectedPlannerId(selectedPlannerId === id ? null : id)}
+                />
+              )}
+              {step === 5 && (
+                <StepVendors
+                  selectedIds={selectedVendorIds}
+                  onToggle={(id) => {
+                    if (selectedVendorIds.includes(id)) {
+                      setSelectedVendorIds(selectedVendorIds.filter((v) => v !== id));
+                    } else {
+                      setSelectedVendorIds([...selectedVendorIds, id]);
+                    }
+                  }}
+                />
+              )}
             </MotiView>
           </View>
         </ScrollView>
+
 
         {/* Footer */}
         <View style={styles.footer}>
@@ -413,6 +471,96 @@ function StepBudget({ budget, onBudgetChange }: { budget: string; onBudgetChange
   );
 }
 
+// ─── Step 4: Planner ──────────────────────────────────
+
+function StepPlanner({ selectedId, onSelect }: { selectedId: string | null; onSelect: (id: string) => void }) {
+  const { planners, loading, error } = usePlanners();
+
+  return (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>¿Quieres asignar un Planner?</Text>
+      <Text style={styles.stepSubtitle}>Un profesional te ayudará con toda la coordinación</Text>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : planners.length === 0 ? (
+        <Text style={styles.emptyText}>No hay planners registrados actualmente.</Text>
+      ) : (
+        <View style={styles.list}>
+          {planners.map((p) => (
+            <TouchableOpacity
+              key={p.id}
+              style={[styles.itemCard, selectedId === p.id && styles.itemCardSelected]}
+              onPress={() => onSelect(p.id)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.itemAvatar}>
+                <Ionicons name="person" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{p.user.name}</Text>
+                {p.businessName ? <Text style={styles.itemSub}>{p.businessName}</Text> : null}
+              </View>
+              <Ionicons
+                name={selectedId === p.id ? "checkmark-circle" : "ellipse-outline"}
+                size={24}
+                color={selectedId === p.id ? colors.primary : colors.border}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ─── Step 5: Vendors ──────────────────────────────────
+
+function StepVendors({ selectedIds, onToggle }: { selectedIds: string[]; onToggle: (id: string) => void }) {
+  const { vendors, loading, error } = useVendors();
+
+  return (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Selecciona tus proveedores</Text>
+      <Text style={styles.stepSubtitle}>Puedes invitar a los proveedores que ya conoces</Text>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <Text style={styles.errorText}>{error}</Text>
+      ) : vendors.length === 0 ? (
+        <Text style={styles.emptyText}>No hay proveedores registrados actualmente.</Text>
+      ) : (
+        <View style={styles.list}>
+          {vendors.map((v) => (
+            <TouchableOpacity
+              key={v.id}
+              style={[styles.itemCard, selectedIds.includes(v.id) && styles.itemCardSelected]}
+              onPress={() => onToggle(v.id)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.itemAvatar, { backgroundColor: "#eff6ff" }]}>
+                <Ionicons name="briefcase" size={20} color="#3b82f6" />
+              </View>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{v.businessName}</Text>
+                <Text style={styles.itemSub}>{v.category.name}</Text>
+              </View>
+              <Ionicons
+                name={selectedIds.includes(v.id) ? "checkbox" : "square-outline"}
+                size={24}
+                color={selectedIds.includes(v.id) ? colors.primary : colors.border}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ─── Styles ───────────────────────────────────────────
 
 const styles = StyleSheet.create({
@@ -510,4 +658,35 @@ const styles = StyleSheet.create({
     borderColor: colors.primary + "40",
   },
   tipText: { flex: 1, fontSize: 13, color: colors.textMain, lineHeight: 20 },
+
+  list: { gap: 10, marginTop: 8 },
+  itemCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    gap: 12,
+  },
+  itemCardSelected: {
+    borderColor: colors.primary,
+    backgroundColor: "#f0fdf4",
+  },
+  itemAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#f0fdf4",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  itemInfo: { flex: 1, gap: 2 },
+  itemName: { fontSize: 14, fontWeight: "700", color: colors.textMain },
+  itemSub: { fontSize: 12, color: colors.textMuted },
+  errorText: { fontSize: 14, color: "#ef4444", textAlign: "center", marginTop: 40 },
+  emptyText: { fontSize: 14, color: colors.textMuted, textAlign: "center", marginTop: 40 },
 });

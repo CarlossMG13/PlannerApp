@@ -15,17 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@clerk/clerk-expo";
 import { colors, radius, shadow } from "@/constants/theme";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+import { usePlanners, PlannerOption } from "@/hooks/usePlanners";
 
-type PlannerOption = {
-  id: string;
-  businessName: string | null;
-  identityType: string;
-  specialties: string[];
-  coverageCities: string[];
-  rating: number | null;
-  user: { name: string; avatarUrl: string | null };
-};
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 type Props = {
   visible: boolean;
@@ -36,37 +28,18 @@ type Props = {
 
 export function AssignPlannerModal({ visible, eventId, onClose, onAssigned }: Props) {
   const { getToken } = useAuth();
+  const { planners, loading, error: fetchError, refetch } = usePlanners();
   const [search, setSearch] = useState("");
-  const [planners, setPlanners] = useState<PlannerOption[]>([]);
-  const [loading, setLoading] = useState(false);
   const [assigning, setAssigning] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const loadPlanners = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = await getToken();
-      const res = await fetch(`${API_URL}/api/planners`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al cargar planners");
-      const data = await res.json();
-      setPlanners(data.planners ?? []);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken]);
 
   useEffect(() => {
     if (visible) {
       setSearch("");
       setError(null);
-      loadPlanners();
+      refetch();
     }
-  }, [visible, loadPlanners]);
+  }, [visible, refetch]);
 
   const handleAssign = async (plannerId: string) => {
     setAssigning(plannerId);
@@ -168,10 +141,10 @@ export function AssignPlannerModal({ visible, eventId, onClose, onAssigned }: Pr
           </View>
 
           {/* Error */}
-          {error ? (
+          {(error || fetchError) ? (
             <View style={styles.errorBox}>
               <Ionicons name="alert-circle-outline" size={16} color="#ef4444" />
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>{error || fetchError}</Text>
             </View>
           ) : null}
 

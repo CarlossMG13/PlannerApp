@@ -223,7 +223,7 @@ export function EventDetailScreen() {
             <TaskListScreen eventId={event.id} canEdit={false} />
           )}
           {activeTab === "presupuesto" && !isVendor && (
-            <BudgetScreen eventId={event.id} />
+            <BudgetScreen eventId={event.id} onRefreshEvent={refetch} />
           )}
           {activeTab === "proveedores" && !isVendor && (
             <VendorListScreen eventId={event.id} />
@@ -259,6 +259,12 @@ function ResumeTab({
 }) {
   const isPlanner = role === "PLANNER";
 
+  const totalActual = event.budgetItems
+    .filter((it) => it.status === "CONFIRMED" || it.status === "PAID")
+    .reduce((acc, it) => acc + Number(it.actualAmount || it.estimatedAmount), 0);
+
+  const budgetLimit = event.totalBudget ? Number(event.totalBudget) : null;
+
   return (
     <>
       {/* Event info */}
@@ -292,6 +298,13 @@ function ResumeTab({
             value={`${event.guestCount} personas`}
           />
         ) : null}
+        
+        <InfoRow
+          icon="cash-outline"
+          label="Gasto real"
+          value={formatCurrency(String(totalActual), event.currency)}
+        />
+
         {event.totalBudget ? (
           <InfoRow
             icon="wallet-outline"
@@ -300,6 +313,29 @@ function ResumeTab({
             isLast
           />
         ) : null}
+
+        {budgetLimit && (
+          <View style={styles.budgetProgressBox}>
+            <View style={styles.budgetProgressHeader}>
+              <Text style={styles.budgetProgressLabel}>Progreso del presupuesto</Text>
+              <Text style={styles.budgetProgressValue}>
+                {Math.round((totalActual / budgetLimit) * 100)}%
+              </Text>
+            </View>
+            <View style={styles.budgetProgressBar}>
+              <View 
+                style={[
+                  styles.budgetProgressFill, 
+                  { 
+                    width: `${Math.min((totalActual / budgetLimit) * 100, 100)}%` as any,
+                    backgroundColor: (totalActual / budgetLimit) > 1 ? "#ef4444" : colors.primary
+                  }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
+
         {event.description ? (
           <View style={styles.descBox}>
             <Text style={styles.descLabel}>Descripción</Text>
@@ -740,6 +776,30 @@ const styles = StyleSheet.create({
   },
   quickStatValue: { fontSize: 20, fontWeight: "800", color: colors.textMain },
   quickStatLabel: { fontSize: 11, color: colors.textMuted, fontWeight: "600", textAlign: "center" },
+
+  budgetProgressBox: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "#f8fafc",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  budgetProgressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  budgetProgressLabel: { fontSize: 12, fontWeight: "600", color: colors.textMuted },
+  budgetProgressValue: { fontSize: 12, fontWeight: "700", color: colors.textMain },
+  budgetProgressBar: {
+    height: 6,
+    backgroundColor: colors.border,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  budgetProgressFill: { height: "100%", borderRadius: 3 },
 
   placeholderTab: {
     alignItems: "center",

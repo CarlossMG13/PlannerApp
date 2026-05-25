@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+
 export type VendorCategory = { id: string; name: string; icon: string | null };
 
 export type VendorService = {
@@ -51,9 +53,10 @@ export function useVendors(categoryId?: string) {
     setError(null);
     try {
       const token = await getTokenRef.current();
-      const url = new URL(`${process.env.EXPO_PUBLIC_API_URL}/api/vendors`);
-      if (categoryId) url.searchParams.set("categoryId", categoryId);
-      const res = await fetch(url.toString(), {
+      let url = `${API_URL}/api/vendors`;
+      if (categoryId) url += `?categoryId=${categoryId}`;
+      
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -61,7 +64,7 @@ export function useVendors(categoryId?: string) {
         setError(data.error ?? "Error al cargar proveedores");
         return;
       }
-      setVendors(data.vendors);
+      setVendors(data.vendors ?? []);
     } catch {
       setError("Error de conexión");
     } finally {
@@ -91,7 +94,7 @@ export function useEventVendors(eventId: string) {
     try {
       const token = await getTokenRef.current();
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/events/${eventId}/vendors`,
+        `${API_URL}/api/events/${eventId}/vendors`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
@@ -99,7 +102,7 @@ export function useEventVendors(eventId: string) {
         setError(data.error ?? "Error al cargar proveedores del evento");
         return;
       }
-      setVendors(data.vendors);
+      setVendors(data.vendors ?? []);
     } catch {
       setError("Error de conexión");
     } finally {

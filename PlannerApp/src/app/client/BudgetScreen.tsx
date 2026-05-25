@@ -13,7 +13,7 @@ import { useBudget, BudgetItem, BudgetItemStatus } from "@/hooks/useBudget";
 import { BudgetItemCard } from "./BudgetItemCard";
 import { AddBudgetItemModal } from "./AddBudgetItemModal";
 
-type Props = { eventId: string };
+type Props = { eventId: string; onRefreshEvent?: () => void };
 
 function formatMXN(value: number | null) {
   if (value === null) return "—";
@@ -25,15 +25,25 @@ function formatMXN(value: number | null) {
   }).format(value);
 }
 
-export function BudgetScreen({ eventId }: Props) {
+export function BudgetScreen({ eventId, onRefreshEvent }: Props) {
   const { items, summary, loading, error, refetch } = useBudget(eventId);
   const [showAdd, setShowAdd] = useState(false);
 
   const handleStatusChange = useCallback(
     (_itemId: string, _newStatus: BudgetItemStatus) => {
       refetch();
+      onRefreshEvent?.();
     },
-    [refetch]
+    [refetch, onRefreshEvent]
+  );
+
+  const liveActual = items
+    .filter((it) => it.status === "CONFIRMED" || it.status === "PAID")
+    .reduce((acc, it) => acc + Number(it.actualAmount || it.estimatedAmount), 0);
+
+  const liveEstimated = items.reduce(
+    (acc, it) => acc + Number(it.estimatedAmount),
+    0
   );
 
   if (loading) {
@@ -62,13 +72,11 @@ export function BudgetScreen({ eventId }: Props) {
   }
 
   const remaining =
-    summary?.totalBudget != null
-      ? summary.totalBudget - summary.totalActual
-      : null;
+    summary?.totalBudget != null ? summary.totalBudget - liveActual : null;
 
   const budgetUsedPct =
     summary?.totalBudget && summary.totalBudget > 0
-      ? Math.min((summary.totalActual / summary.totalBudget) * 100, 100)
+      ? Math.min((liveActual / summary.totalBudget) * 100, 100)
       : 0;
 
   return (
@@ -91,7 +99,7 @@ export function BudgetScreen({ eventId }: Props) {
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Gasto real</Text>
             <Text style={[styles.summaryValue, { color: "#f59e0b" }]}>
-              {formatMXN(summary?.totalActual ?? 0)}
+              {formatMXN(liveActual)}
             </Text>
           </View>
           <View style={styles.summaryDivider} />
@@ -131,7 +139,7 @@ export function BudgetScreen({ eventId }: Props) {
         )}
 
         <Text style={styles.estimatedLabel}>
-          Estimado: {formatMXN(summary?.totalEstimated ?? 0)}
+          Estimado: {formatMXN(liveEstimated)}
         </Text>
       </MotiView>
 
@@ -198,6 +206,7 @@ export function BudgetScreen({ eventId }: Props) {
         onCreated={() => {
           setShowAdd(false);
           refetch();
+          onRefreshEvent?.();
         }}
       />
     </>
